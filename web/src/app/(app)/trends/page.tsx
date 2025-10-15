@@ -2,6 +2,7 @@ import { MobileShell } from "@/components/layout/mobile-shell";
 import { Progress } from "@/components/ui/progress";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate, parseISODate } from "@/lib/date";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 import { calculateNetCalories } from "@/lib/nutrition";
 import { CalendarCheck, Flame, Trophy } from "lucide-react";
 
@@ -20,24 +21,25 @@ type RecentLog = {
   log_date: string;
 };
 
-function buildDateRange(start: Date, days: number) {
+function buildDateRange(start: Date, days: number, offset?: number) {
   return Array.from({ length: days }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const iso = getLocalISODate(date);
-    const label = date.toLocaleDateString(undefined, { weekday: "short" });
-    return { iso, label, date };
+    const iso = getLocalISODate(date, offset);
+    const labelDate = new Date(`${iso}T00:00:00`);
+    const label = labelDate.toLocaleDateString(undefined, { weekday: "short" });
+    return { iso, label, date: labelDate };
   });
 }
 
-function calculateStreak(logDates: RecentLog[], todayIso: string) {
+function calculateStreak(logDates: RecentLog[], todayIso: string, offset?: number) {
   if (!logDates.length) return 0;
   const logSet = new Set(logDates.map((item) => item.log_date));
   let streak = 0;
   const cursor = parseISODate(todayIso);
 
   while (true) {
-    const iso = getLocalISODate(cursor);
+    const iso = getLocalISODate(cursor, offset);
     if (!logSet.has(iso)) {
       break;
     }
@@ -54,11 +56,12 @@ export default async function TrendsPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
+  const timezoneOffset = readTimezoneOffsetFromCookies();
   const today = new Date();
-  const todayIso = getLocalISODate(today);
+  const todayIso = getLocalISODate(today, timezoneOffset);
   const startDate = new Date(today);
   startDate.setDate(today.getDate() - 6);
-  const startIso = getLocalISODate(startDate);
+  const startIso = getLocalISODate(startDate, timezoneOffset);
 
   const { data: weeklyLogs } = await supabase
     .from("daily_logs")
@@ -80,7 +83,7 @@ export default async function TrendsPage() {
     .returns<RecentLog[]>();
 
   const logsByDate = new Map((weeklyLogs ?? []).map((log) => [log.log_date, log]));
-  const range = buildDateRange(startDate, 7).map((day) => ({
+  const range = buildDateRange(startDate, 7, timezoneOffset).map((day) => ({
     ...day,
     log: logsByDate.get(day.iso) ?? null,
   }));
@@ -149,7 +152,7 @@ export default async function TrendsPage() {
   const loggedDays = daysWithEntries.length;
   const compliance = Math.round((loggedDays / range.length) * 100);
 
-  const streak = calculateStreak(recentLogs ?? [], todayIso);
+  const streak = calculateStreak(recentLogs ?? [], todayIso, timezoneOffset);
 
   return (
     <MobileShell

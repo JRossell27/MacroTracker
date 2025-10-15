@@ -3,6 +3,7 @@ import { MobileShell } from "@/components/layout/mobile-shell";
 import { Progress } from "@/components/ui/progress";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate } from "@/lib/date";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 import {
   calculateMealTotals,
   calculateNetCalories,
@@ -32,7 +33,8 @@ export default async function DashboardPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const today = getLocalISODate();
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const today = getLocalISODate(new Date(), timezoneOffset);
 
   const { data: log } = await supabase
     .from("daily_logs")

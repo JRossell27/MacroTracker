@@ -14,6 +14,7 @@ import {
   FALLBACK_USER_SETTINGS,
   fetchUserSettings,
 } from "@/lib/user-settings";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 import type { Database } from "@/lib/database.types";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
@@ -34,7 +35,8 @@ export default async function LogPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const today = getLocalISODate();
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const today = getLocalISODate(new Date(), timezoneOffset);
 
   const { data: log } = await supabase
     .from("daily_logs")

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { signOutAction } from "@/app/(auth)/actions";
 import type { Database } from "@/lib/database.types";
+import { TimezoneSync } from "@/components/timezone-sync";
 
 export default async function AppLayout({
   children,
@@ -35,6 +36,7 @@ export default async function AppLayout({
 
   return (
     <div className="relative flex min-h-dvh flex-col gap-6 px-4 pb-24 pt-6">
+      <TimezoneSync />
       <header className="flex items-center justify-between rounded-2xl border border-slate-800/70 bg-slate-900/40 px-4 py-3">
         <div>
           <p className="text-xs uppercase tracking-[0.28em] text-slate-500">

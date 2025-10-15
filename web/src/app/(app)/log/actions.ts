@@ -14,6 +14,7 @@ import {
   mergeUserSettings,
 } from "@/lib/user-settings";
 import type { BiologicalSex } from "@/lib/bmr";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 
 export type GoalRecommendationPayload = {
   logDate: string;
@@ -97,8 +98,10 @@ export async function upsertDailyLogAction(
     return { status: "error", message: "You need to sign in again." };
   }
 
+  const timezoneOffset = readTimezoneOffsetFromCookies();
   const logDate =
-    String(formData.get("logDate") ?? "") || getLocalISODate(new Date());
+    String(formData.get("logDate") ?? "") ||
+    getLocalISODate(new Date(), timezoneOffset);
 
   const payload: Database["public"]["Tables"]["daily_logs"]["Insert"] = {
     user_id: user.id,
@@ -339,9 +342,11 @@ export async function applyGoalRecommendationAction(
     return { status: "error", message: "Unable to read recommendation payload." };
   }
 
+  const timezoneOffset = readTimezoneOffsetFromCookies();
   const logDate =
-    payload.logDate || String(formData.get("logDate") ?? "") ||
-    getLocalISODate(new Date());
+    payload.logDate ||
+    String(formData.get("logDate") ?? "") ||
+    getLocalISODate(new Date(), timezoneOffset);
 
   const upsertPayload: Database["public"]["Tables"]["daily_logs"]["Insert"] = {
     user_id: user.id,
@@ -468,7 +473,10 @@ export async function addHydrationAction(
   ).trim();
   const amount = Number(amountRaw || 0);
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
-  const logDate = String(formData.get("logDate") ?? getLocalISODate(new Date()));
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const logDate =
+    String(formData.get("logDate") ?? "") ||
+    getLocalISODate(new Date(), timezoneOffset);
 
   if (!Number.isFinite(amount) || amount <= 0) {
     return { status: "error", message: "Enter a positive water amount." };
@@ -567,7 +575,10 @@ export async function updateActiveCaloriesAction(
   const amountRaw = String(formData.get("amount") ?? "").trim();
   const amount = Number(amountRaw || 0);
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
-  const logDate = String(formData.get("logDate") ?? getLocalISODate(new Date()));
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const logDate =
+    String(formData.get("logDate") ?? "") ||
+    getLocalISODate(new Date(), timezoneOffset);
 
   if (!Number.isFinite(amount) || amount < 0) {
     return { status: "error", message: "Enter a non-negative active calorie value." };

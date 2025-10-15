@@ -9,6 +9,7 @@ import {
   fetchUserSettings,
   inchesToFeetAndInches,
 } from "@/lib/user-settings";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
 
@@ -18,7 +19,8 @@ export default async function SettingsPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const today = getLocalISODate();
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const today = getLocalISODate(new Date(), timezoneOffset);
 
   const { data: log } = await supabase
     .from("daily_logs")

@@ -1,6 +1,13 @@
-export function getLocalISODate(date = new Date()) {
-  const tzOffset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 10);
+export function getLocalISODate(
+  date = new Date(),
+  timezoneOffsetMinutes?: number,
+) {
+  const effectiveOffset =
+    typeof timezoneOffsetMinutes === "number" && Number.isFinite(timezoneOffsetMinutes)
+      ? timezoneOffsetMinutes
+      : date.getTimezoneOffset();
+  const tzOffsetMs = effectiveOffset * 60000;
+  return new Date(date.getTime() - tzOffsetMs).toISOString().slice(0, 10);
 }
 
 export function formatDisplayDate(date: string) {

@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate } from "@/lib/date";
+import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 import {
   calculateNetCalories,
   estimateWeightChange,
@@ -38,10 +39,11 @@ export default async function CoachPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const todayIso = getLocalISODate();
+  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const todayIso = getLocalISODate(new Date(), timezoneOffset);
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 6);
-  const startIso = getLocalISODate(startDate);
+  const startIso = getLocalISODate(startDate, timezoneOffset);
 
   const { data: todayLog } = await supabase
     .from("daily_logs")
