@@ -4,7 +4,7 @@ import { InlineDeleteButton } from "@/components/ui/inline-delete-button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDisplayDate, getLocalISODate } from "@/lib/date";
 import { deleteMealAction, deleteNoteAction } from "./actions";
-import { DailySummaryForm } from "./_components/daily-summary-form";
+import { GoalSummaryPanel } from "./_components/goal-summary-panel";
 import { AddMealForm } from "./_components/add-meal-form";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
@@ -138,7 +138,7 @@ export default async function LogPage() {
               Nutrition logged
             </p>
             <h2 className="text-2xl font-semibold text-slate-50">
-              {actualCalories} kcal
+              {safeCalories} kcal
             </h2>
           </div>
           <span className="rounded-full bg-slate-800/70 px-3 py-1 text-xs font-semibold text-slate-300">
@@ -167,24 +167,12 @@ export default async function LogPage() {
           </div>
         </div>
       </section>
-
-      <section className="card space-y-5 p-5">
-        <header className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-100">
-              Day summary targets
-            </h3>
-            <p className="text-xs text-slate-400">
-              Adjust goals, hydration, and energy burn for today.
-            </p>
-          </div>
-        </header>
-        <DailySummaryForm
-          logDate={log?.log_date ?? today}
-          existing={Boolean(log)}
-          defaults={summaryDefaults}
-        />
-      </section>
+      <GoalSummaryPanel
+        logDate={log?.log_date ?? today}
+        existing={Boolean(log)}
+        defaults={summaryDefaults}
+        dailyLogId={dailyLogId}
+      />
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="card space-y-5 p-5">

@@ -9,6 +9,15 @@ import {
   type LogActionState,
 } from "./shared-state";
 
+
+export type GoalRecommendationPayload = {
+  logDate: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
 const REVALIDATE_PATHS = ["/dashboard", "/log", "/trends", "/coach"];
 
 function toNumber(value: FormDataEntryValue | null, fallback = 0) {
@@ -147,6 +156,46 @@ export async function addMealAction(
     return { status: "error", message: "Add a name for your meal." };
   }
 
+  const rawIngredients = String(formData.get("mealIngredients") ?? "[]");
+  let ingredients: {
+    name: string;
+    amount?: string;
+    calories?: number | null;
+    protein?: number | null;
+    carbs?: number | null;
+    fat?: number | null;
+  }[] = [];
+
+  try {
+    const parsed = JSON.parse(rawIngredients);
+    if (Array.isArray(parsed)) {
+      ingredients = parsed
+        .map((item) => ({
+          name: String(item.name ?? "").trim(),
+          amount: item.amount ? String(item.amount) : undefined,
+          calories:
+            item.calories === undefined || item.calories === null
+              ? null
+              : Number(item.calories),
+          protein:
+            item.protein === undefined || item.protein === null
+              ? null
+              : Number(item.protein),
+          carbs:
+            item.carbs === undefined || item.carbs === null
+              ? null
+              : Number(item.carbs),
+          fat:
+            item.fat === undefined || item.fat === null
+              ? null
+              : Number(item.fat),
+        }))
+        .filter((item) => item.name.length > 0);
+    }
+  } catch {
+    ingredients = [];
+  }
+
   const mealInsert: Database["public"]["Tables"]["meals"]["Insert"] = {
     daily_log_id: dailyLogId,
     name,
@@ -157,13 +206,34 @@ export async function addMealAction(
     fat: toNumber(formData.get("mealFat"), 0),
   };
 
-  const { error } = await supabase.from("meals").insert(mealInsert);
+  const { data: mealRow, error } = await supabase
+    .from("meals")
+    .insert(mealInsert)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
+  if (error || !mealRow) {
     return {
       status: "error",
-      message: error.message ?? "Unable to add meal.",
+      message: error?.message ?? "Unable to add meal.",
     };
+  }
+
+  if (ingredients.length > 0) {
+    await supabase
+      .from("meal_items")
+      .insert(
+        ingredients.map((ingredient) => ({
+          meal_id: mealRow.id,
+          name: ingredient.name,
+          serving: ingredient.amount ?? null,
+          calories: ingredient.calories,
+          protein: ingredient.protein,
+          carbs: ingredient.carbs,
+          fat: ingredient.fat,
+        })),
+      )
+      .throwOnError();
   }
 
   await recalculateDailyTotals(supabase, dailyLogId);
@@ -225,3 +295,60 @@ export async function deleteNoteAction(formData: FormData) {
   await supabase.from("daily_notes").delete().eq("id", noteId);
   triggerRevalidate();
 }
+export async function applyGoalRecommendationAction(
+  _prevState: LogActionState | void,
+  formData: FormData,
+): Promise<LogActionState> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { status: "error", message: "Sign back in to update targets." };
+  }
+
+  const payloadRaw = formData.get("recommendedPayload");
+  if (typeof payloadRaw !== "string") {
+    return { status: "error", message: "Missing recommendation payload." };
+  }
+
+  let payload: GoalRecommendationPayload | null = null;
+  try {
+    payload = JSON.parse(payloadRaw) as GoalRecommendationPayload;
+  } catch {
+    payload = null;
+  }
+
+  if (!payload) {
+    return { status: "error", message: "Unable to read recommendation payload." };
+  }
+
+  const logDate =
+    payload.logDate || String(formData.get("logDate") ?? "") ||
+    getLocalISODate(new Date());
+
+  const upsertPayload: Database["public"]["Tables"]["daily_logs"]["Insert"] = {
+    user_id: user.id,
+    log_date: logDate,
+    calories_goal: payload.calories,
+    protein_goal: payload.protein,
+    carbs_goal: payload.carbs,
+    fat_goal: payload.fat,
+  };
+
+  const { error } = await supabase
+    .from("daily_logs")
+    .upsert(upsertPayload, { onConflict: "user_id,log_date" });
+
+  if (error) {
+    return {
+      status: "error",
+      message: error.message ?? "Unable to apply targets.",
+    };
+  }
+
+  triggerRevalidate();
+  return LOG_ACTION_INITIAL_STATE;
+}
+

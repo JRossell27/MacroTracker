@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { addMealAction } from "../actions";
 import { LOG_ACTION_INITIAL_STATE } from "../shared-state";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
+import { MealIngredientsFieldset, type MacroTotals } from "./meal-ingredients-fieldset";
 
 type AddMealFormProps = {
   dailyLogId: string | null;
@@ -17,10 +18,22 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
   );
   const currentState = state ?? LOG_ACTION_INITIAL_STATE;
   const isDisabled = disabled || !dailyLogId;
+  const [ingredientTotals, setIngredientTotals] = useState<MacroTotals>({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+  });
 
   return (
     <form action={dispatch} className="space-y-4">
       <input type="hidden" name="dailyLogId" value={dailyLogId ?? ""} />
+      <MealIngredientsFieldset
+        onChange={() => {}}
+        onTotalsChange={setIngredientTotals}
+        disabled={isDisabled}
+      />
+
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="surface flex flex-col gap-2 rounded-2xl px-3 py-3 text-slate-300">
           Meal name
@@ -43,6 +56,15 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
           />
         </label>
       </div>
+
+      <p className="text-xs text-slate-400">
+        Macro totals calculated from ingredients:{" "}
+        <span className="font-semibold text-slate-200">
+          {ingredientTotals.calories} kcal
+        </span>{" "}
+        · {ingredientTotals.protein}P / {ingredientTotals.carbs}C /{" "}
+        {ingredientTotals.fat}F. Adjust below if you want to round or tweak.
+      </p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="surface flex flex-col gap-2 rounded-2xl px-3 py-3 text-slate-300">
