@@ -6,6 +6,7 @@ import { formatDisplayDate, getLocalISODate } from "@/lib/date";
 import { deleteMealAction, deleteNoteAction } from "./actions";
 import { GoalSummaryPanel } from "./_components/goal-summary-panel";
 import { AddMealForm } from "./_components/add-meal-form";
+import { QuickRecipesPanel } from "./_components/quick-recipes-panel";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
 import type { Database } from "@/lib/database.types";
@@ -86,6 +87,12 @@ export default async function LogPage() {
     .maybeSingle();
 
   const dailyLogId = log?.id ?? null;
+  const { data: recipes } = await supabase
+    .from("recipes")
+    .select("id, name, description, calories, protein, carbs, fat")
+    .eq("user_id", session?.user.id ?? "")
+    .order("created_at", { ascending: false });
+
   const meals = log?.meals ?? [];
   const notes = log?.daily_notes ?? [];
 
@@ -238,7 +245,8 @@ export default async function LogPage() {
             Log calories and macros to keep your totals accurate.
           </p>
         </header>
-        <AddMealForm dailyLogId={log?.id ?? null} />
+        <QuickRecipesPanel recipes={recipes ?? []} dailyLogId={dailyLogId} />
+        <AddMealForm dailyLogId={dailyLogId} />
       </section>
 
       <section className="space-y-4">

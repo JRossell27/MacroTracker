@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { addMealAction } from "../actions";
 import { LOG_ACTION_INITIAL_STATE } from "../shared-state";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
@@ -24,6 +24,38 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
     carbs: 0,
     fat: 0,
   });
+  const [macroInputs, setMacroInputs] = useState({
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
+  });
+
+  useEffect(() => {
+    if (ingredientTotals.calories === 0) return;
+    setMacroInputs((prev) => ({
+      calories: prev.calories || String(ingredientTotals.calories),
+      protein: prev.protein || String(ingredientTotals.protein),
+      carbs: prev.carbs || String(ingredientTotals.carbs),
+      fat: prev.fat || String(ingredientTotals.fat),
+    }));
+  }, [ingredientTotals]);
+
+  const handleMacroChange = (field: keyof typeof macroInputs, value: string) => {
+    setMacroInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const copyIngredientTotals = () => {
+    setMacroInputs({
+      calories: String(ingredientTotals.calories || ""),
+      protein: String(ingredientTotals.protein || ""),
+      carbs: String(ingredientTotals.carbs || ""),
+      fat: String(ingredientTotals.fat || ""),
+    });
+  };
 
   return (
     <form action={dispatch} className="space-y-4">
@@ -65,6 +97,14 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
         · {ingredientTotals.protein}P / {ingredientTotals.carbs}C /{" "}
         {ingredientTotals.fat}F. Adjust below if you want to round or tweak.
       </p>
+      <button
+        type="button"
+        onClick={copyIngredientTotals}
+        disabled={isDisabled}
+        className="text-xs font-semibold text-sky-300 transition hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Copy ingredient totals into fields
+      </button>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="surface flex flex-col gap-2 rounded-2xl px-3 py-3 text-slate-300">
@@ -75,6 +115,10 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
             inputMode="numeric"
             min={0}
             disabled={isDisabled}
+            value={macroInputs.calories}
+            onChange={(event) =>
+              handleMacroChange("calories", event.target.value)
+            }
             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="480"
           />
@@ -87,6 +131,10 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
             inputMode="numeric"
             min={0}
             disabled={isDisabled}
+            value={macroInputs.protein}
+            onChange={(event) =>
+              handleMacroChange("protein", event.target.value)
+            }
             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="38"
           />
@@ -99,6 +147,10 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
             inputMode="numeric"
             min={0}
             disabled={isDisabled}
+            value={macroInputs.carbs}
+            onChange={(event) =>
+              handleMacroChange("carbs", event.target.value)
+            }
             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="52"
           />
@@ -111,6 +163,10 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
             inputMode="numeric"
             min={0}
             disabled={isDisabled}
+            value={macroInputs.fat}
+            onChange={(event) =>
+              handleMacroChange("fat", event.target.value)
+            }
             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/40 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="18"
           />

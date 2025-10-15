@@ -18,7 +18,7 @@ export type GoalRecommendationPayload = {
   fat: number;
 };
 
-const REVALIDATE_PATHS = ["/dashboard", "/log", "/trends", "/coach"];
+const REVALIDATE_PATHS = ["/dashboard", "/log", "/trends", "/coach", "/settings"];
 
 function toNumber(value: FormDataEntryValue | null, fallback = 0) {
   if (value === null || value === "") {
@@ -350,5 +350,38 @@ export async function applyGoalRecommendationAction(
 
   triggerRevalidate();
   return LOG_ACTION_INITIAL_STATE;
+}
+export async function addMealFromRecipeAction(formData: FormData) {
+  const supabase = await createSupabaseServerClient();
+  const recipeId = String(formData.get("recipeId") ?? "");
+  const dailyLogId = String(formData.get("dailyLogId") ?? "");
+
+  if (!recipeId || !dailyLogId) {
+    return;
+  }
+
+  const { data: recipe } = await supabase
+    .from("recipes")
+    .select("name, calories, protein, carbs, fat")
+    .eq("id", recipeId)
+    .maybeSingle();
+
+  if (!recipe) {
+    return;
+  }
+
+  const mealInsert: Database["public"]["Tables"]["meals"]["Insert"] = {
+    daily_log_id: dailyLogId,
+    name: recipe.name,
+    logged_at: null,
+    calories: recipe.calories ?? 0,
+    protein: recipe.protein ?? 0,
+    carbs: recipe.carbs ?? 0,
+    fat: recipe.fat ?? 0,
+  };
+
+  await supabase.from("meals").insert(mealInsert).throwOnError();
+  await recalculateDailyTotals(supabase, dailyLogId);
+  triggerRevalidate();
 }
 

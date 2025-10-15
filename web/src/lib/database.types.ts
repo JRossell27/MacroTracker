@@ -154,6 +154,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      recipes: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          description: string | null;
+          calories: number | null;
+          protein: number | null;
+          carbs: number | null;
+          fat: number | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          description?: string | null;
+          calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          description?: string | null;
+          calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
       daily_notes: {
         Row: {
           id: string;

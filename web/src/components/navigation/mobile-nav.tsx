@@ -8,6 +8,7 @@ import {
   ListPlus,
   LineChart,
   Sparkles,
+  Settings,
 } from "lucide-react";
 
 type NavItem = {
@@ -21,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/log", label: "Log", icon: ListPlus },
   { href: "/trends", label: "Trends", icon: LineChart },
   { href: "/coach", label: "Coach", icon: Sparkles },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function MobileNav() {
