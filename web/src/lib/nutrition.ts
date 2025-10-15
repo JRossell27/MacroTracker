@@ -7,12 +7,19 @@ type MealRow = Pick<
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
 
 export function calculateMealTotals(meals: MealRow[] = []) {
-  return meals.reduce(
+  type MacroTotals = {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+
+  return meals.reduce<MacroTotals>(
     (acc, meal) => ({
-      calories: acc.calories + (meal.calories ?? 0),
-      protein: acc.protein + (meal.protein ?? 0),
-      carbs: acc.carbs + (meal.carbs ?? 0),
-      fat: acc.fat + (meal.fat ?? 0),
+      calories: (acc.calories ?? 0) + (meal.calories ?? 0),
+      protein: (acc.protein ?? 0) + (meal.protein ?? 0),
+      carbs: (acc.carbs ?? 0) + (meal.carbs ?? 0),
+      fat: (acc.fat ?? 0) + (meal.fat ?? 0),
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
