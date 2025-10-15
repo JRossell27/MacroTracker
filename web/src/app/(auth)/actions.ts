@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
 
 export type AuthActionState = {
   status: "idle" | "error";
@@ -63,12 +64,14 @@ export async function signUpAction(
   }
 
   if (data.user) {
+    const profileUpsert = {
+      id: data.user.id,
+      display_name: displayName || null,
+    } satisfies Database["public"]["Tables"]["profiles"]["Insert"];
+
     await supabase
       .from("profiles")
-      .upsert({
-        id: data.user.id,
-        display_name: displayName || null,
-      })
+      .upsert(profileUpsert)
       .throwOnError();
   }
 
