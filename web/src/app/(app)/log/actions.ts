@@ -384,4 +384,81 @@ export async function addMealFromRecipeAction(formData: FormData) {
   await recalculateDailyTotals(supabase, dailyLogId);
   triggerRevalidate();
 }
+export async function addHydrationAction(
+  _prevState: LogActionState | void,
+  formData: FormData,
+): Promise<LogActionState> {
+  const supabase = await createSupabaseServerClient();
+  const amountRaw = String(
+    formData.get("amount") ?? formData.get("customAmount") ?? "0",
+  ).trim();
+  const amount = Number(amountRaw || 0);
+  const dailyLogId = String(formData.get("dailyLogId") ?? "");
+  const logDate = String(formData.get("logDate") ?? getLocalISODate(new Date()));
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { status: "error", message: "Enter a positive water amount." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { status: "error", message: "Sign back in to log water." };
+  }
+
+  let target = null as { id: string; hydration_oz: number | null } | null;
+
+  if (dailyLogId) {
+    const { data } = await supabase
+      .from("daily_logs")
+      .select("id, hydration_oz")
+      .eq("id", dailyLogId)
+      .maybeSingle();
+    target = data;
+  } else {
+    const { data } = await supabase
+      .from("daily_logs")
+      .select("id, hydration_oz")
+      .eq("user_id", user.id)
+      .eq("log_date", logDate)
+      .maybeSingle();
+    target = data;
+  }
+
+  if (!target) {
+    const { data, error } = await supabase
+      .from("daily_logs")
+      .upsert({
+        user_id: user.id,
+        log_date: logDate,
+        hydration_oz: amount,
+      })
+      .select("id, hydration_oz")
+      .maybeSingle();
+
+    if (error || !data) {
+      return {
+        status: "error",
+        message: error?.message ?? "Unable to log water right now.",
+      };
+    }
+
+    target = data;
+  } else {
+    await supabase
+      .from("daily_logs")
+      .update({
+        hydration_oz: (target.hydration_oz ?? 0) + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", target.id)
+      .throwOnError();
+  }
+
+  triggerRevalidate();
+  return LOG_ACTION_INITIAL_STATE;
+}
+
 

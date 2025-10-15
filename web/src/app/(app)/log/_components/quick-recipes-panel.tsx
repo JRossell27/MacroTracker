@@ -2,7 +2,7 @@
 
 import { addMealFromRecipeAction } from "../actions";
 
- type Recipe = {
+type Recipe = {
   id: string;
   name: string;
   description: string | null;
@@ -12,12 +12,12 @@ import { addMealFromRecipeAction } from "../actions";
   fat: number | null;
 };
 
- type QuickRecipesPanelProps = {
+type QuickRecipesPanelProps = {
   recipes: Recipe[];
   dailyLogId: string | null;
 };
 
- export function QuickRecipesPanel({
+export function QuickRecipesPanel({
   recipes,
   dailyLogId,
 }: QuickRecipesPanelProps) {
@@ -60,4 +60,4 @@ import { addMealFromRecipeAction } from "../actions";
       </div>
     </div>
   );
- }
+}

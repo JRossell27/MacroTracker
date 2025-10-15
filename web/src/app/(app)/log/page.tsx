@@ -4,9 +4,9 @@ import { InlineDeleteButton } from "@/components/ui/inline-delete-button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDisplayDate, getLocalISODate } from "@/lib/date";
 import { deleteMealAction, deleteNoteAction } from "./actions";
-import { GoalSummaryPanel } from "./_components/goal-summary-panel";
 import { AddMealForm } from "./_components/add-meal-form";
 import { QuickRecipesPanel } from "./_components/quick-recipes-panel";
+import { AddHydrationForm } from "./_components/add-hydration-form";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
 import type { Database } from "@/lib/database.types";
@@ -175,13 +175,6 @@ export default async function LogPage() {
           </div>
         </div>
       </section>
-      <GoalSummaryPanel
-        logDate={log?.log_date ?? today}
-        existing={Boolean(log)}
-        defaults={summaryDefaults}
-        dailyLogId={dailyLogId}
-      />
-
       <section className="grid gap-4 md:grid-cols-2">
         <div className="card space-y-5 p-5">
           <header>
@@ -195,13 +188,16 @@ export default async function LogPage() {
           <Progress value={hydrationPercent} showLabel />
           <div className="text-sm text-slate-300">
             <p>
-              {summaryDefaults.hydrationActual} /{" "}
-              {summaryDefaults.hydrationTarget} oz
+              {summaryDefaults.hydrationActual} / {summaryDefaults.hydrationTarget} oz
             </p>
             <p className="text-xs text-slate-500">
               Tip: aim for half your target before midday.
             </p>
           </div>
+          <AddHydrationForm
+            dailyLogId={dailyLogId}
+            logDate={log?.log_date ?? today}
+          />
         </div>
 
         <div className="card space-y-5 p-5">
