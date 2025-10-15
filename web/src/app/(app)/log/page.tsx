@@ -7,6 +7,7 @@ import { deleteMealAction, deleteNoteAction } from "./actions";
 import { AddMealForm } from "./_components/add-meal-form";
 import { QuickRecipesPanel } from "./_components/quick-recipes-panel";
 import { AddHydrationForm } from "./_components/add-hydration-form";
+import { ActiveCaloriesForm } from "./_components/active-calories-form";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
 import type { Database } from "@/lib/database.types";
@@ -203,10 +204,10 @@ export default async function LogPage() {
         <div className="card space-y-5 p-5">
           <header>
             <h3 className="text-lg font-semibold text-slate-100">
-              Quick stats
+              Activity & stats
             </h3>
             <p className="text-xs text-slate-400">
-              Weight, basal burn, and activity pull in from your wearable.
+              Update your burn manually or copy from your wearable once synced.
             </p>
           </header>
           <ul className="space-y-3 text-sm text-slate-300">
@@ -222,13 +223,12 @@ export default async function LogPage() {
                 {summaryDefaults.basalCalories} kcal
               </span>
             </li>
-            <li className="flex items-center justify-between">
-              <span>Active calories</span>
-              <span className="font-semibold text-slate-50">
-                {summaryDefaults.activeCalories} kcal
-              </span>
-            </li>
           </ul>
+          <ActiveCaloriesForm
+            dailyLogId={dailyLogId}
+            logDate={log?.log_date ?? today}
+            currentActive={summaryDefaults.activeCalories}
+          />
         </div>
       </section>
 

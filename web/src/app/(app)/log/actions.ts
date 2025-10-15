@@ -467,5 +467,67 @@ export async function addHydrationAction(
   triggerRevalidate();
   return LOG_ACTION_INITIAL_STATE;
 }
+export async function updateActiveCaloriesAction(
+  _prevState: LogActionState | void,
+  formData: FormData,
+): Promise<LogActionState> {
+  const supabase = await createSupabaseServerClient();
+  const amountRaw = String(formData.get("amount") ?? "").trim();
+  const dailyLogId = String(formData.get("dailyLogId") ?? "");
+  const logDate = String(formData.get("logDate") ?? getLocalISODate(new Date()));
 
+  const amount = Number(amountRaw || 0);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return { status: "error", message: "Enter a non-negative active calorie value." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { status: "error", message: "Sign back in to update active calories." };
+  }
+
+  let targetId = dailyLogId;
+  if (!targetId) {
+    const { data } = await supabase
+      .from("daily_logs")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("log_date", logDate)
+      .maybeSingle();
+    targetId = data?.id ?? null;
+  }
+
+  const upsertPayload: Database["public"]["Tables"]["daily_logs"]["Insert"] = {
+    user_id: user.id,
+    log_date: logDate,
+    calories_goal: 2200,
+    protein_goal: 160,
+    carbs_goal: 210,
+    fat_goal: 70,
+    active_calories: amount,
+  };
+
+  const { error } = await supabase
+    .from("daily_logs")
+    .upsert(upsertPayload, { onConflict: "user_id,log_date" });
+
+  const { data } = await supabase
+    .from("daily_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("log_date", logDate)
+    .maybeSingle();
+
+  targetId = data?.id ?? targetId;
+
+  if (error) {
+    return { status: "error", message: error.message ?? "Unable to update active calories." };
+  }
+
+  triggerRevalidate();
+  return LOG_ACTION_INITIAL_STATE;
+}
 
