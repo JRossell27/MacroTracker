@@ -55,17 +55,15 @@ async function recalculateDailyTotals(
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  const totalsUpdate = {
-    calories_intake: totals.calories,
-    protein_intake: totals.protein,
-    carbs_intake: totals.carbs,
-    fat_intake: totals.fat,
-    updated_at: new Date().toISOString(),
-  } satisfies Database["public"]["Tables"]["daily_logs"]["Update"];
-
   await supabase
     .from("daily_logs")
-    .update(totalsUpdate)
+    .update({
+      calories_intake: totals.calories,
+      protein_intake: totals.protein,
+      carbs_intake: totals.carbs,
+      fat_intake: totals.fat,
+      updated_at: new Date().toISOString(),
+    } as Database["public"]["Tables"]["daily_logs"]["Update"])
     .eq("id", dailyLogId);
 }
 
