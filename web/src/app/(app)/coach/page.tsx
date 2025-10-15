@@ -60,23 +60,23 @@ export default async function CoachPage() {
   startDate.setDate(startDate.getDate() - 6);
   const startIso = getLocalISODate(startDate);
 
-  const [{ data: todayLog }, { data: weeklyLogs }] = await Promise.all([
-    supabase
-      .from("daily_logs")
-      .select(
-        "id, log_date, calories_goal, protein_goal, carbs_goal, fat_goal, calories_intake, protein_intake, carbs_intake, fat_intake, hydration_oz, hydration_target_oz, active_calories, basal_calories, weight, daily_notes(id, note)"
-      )
-      .eq("user_id", session?.user.id ?? "")
-      .eq("log_date", todayIso)
-      .maybeSingle<DailyLog>(),
-    supabase
-      .from("daily_logs")
-      .select("calories_intake, active_calories, basal_calories")
-      .eq("user_id", session?.user.id ?? "")
-      .gte("log_date", startIso)
-      .lte("log_date", todayIso)
-      .order("log_date", { ascending: true }) as Promise<{ data: WeeklyLog[] | null }>,
-  ]);
+  const { data: todayLog } = await supabase
+    .from("daily_logs")
+    .select(
+      "id, log_date, calories_goal, protein_goal, carbs_goal, fat_goal, calories_intake, protein_intake, carbs_intake, fat_intake, hydration_oz, hydration_target_oz, active_calories, basal_calories, weight, daily_notes(id, note)",
+    )
+    .eq("user_id", session?.user.id ?? "")
+    .eq("log_date", todayIso)
+    .maybeSingle<DailyLog>();
+
+  const { data: weeklyLogs } = await supabase
+    .from("daily_logs")
+    .select("calories_intake, active_calories, basal_calories")
+    .eq("user_id", session?.user.id ?? "")
+    .gte("log_date", startIso)
+    .lte("log_date", todayIso)
+    .order("log_date", { ascending: true })
+    .returns<WeeklyLog[]>();
 
   const weeklyNetValues = (weeklyLogs ?? []).map((log) =>
     calculateNetCalories({

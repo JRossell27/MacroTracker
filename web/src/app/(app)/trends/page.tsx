@@ -60,23 +60,24 @@ export default async function TrendsPage() {
   startDate.setDate(today.getDate() - 6);
   const startIso = getLocalISODate(startDate);
 
-  const [{ data: weeklyLogs }, { data: recentLogs }] = await Promise.all([
-    supabase
-      .from("daily_logs")
-      .select(
-        "log_date, calories_intake, basal_calories, active_calories, protein_intake, carbs_intake, fat_intake, weight",
-      )
-      .eq("user_id", session?.user.id ?? "")
-      .gte("log_date", startIso)
-      .lte("log_date", todayIso)
-      .order("log_date", { ascending: true }) as Promise<{ data: WeeklyLog[] | null }>,
-    supabase
-      .from("daily_logs")
-      .select("log_date")
-      .eq("user_id", session?.user.id ?? "")
-      .order("log_date", { ascending: false })
-      .limit(30) as Promise<{ data: RecentLog[] | null }>,
-  ]);
+  const { data: weeklyLogs } = await supabase
+    .from("daily_logs")
+    .select(
+      "log_date, calories_intake, basal_calories, active_calories, protein_intake, carbs_intake, fat_intake, weight",
+    )
+    .eq("user_id", session?.user.id ?? "")
+    .gte("log_date", startIso)
+    .lte("log_date", todayIso)
+    .order("log_date", { ascending: true })
+    .returns<WeeklyLog[]>();
+
+  const { data: recentLogs } = await supabase
+    .from("daily_logs")
+    .select("log_date")
+    .eq("user_id", session?.user.id ?? "")
+    .order("log_date", { ascending: false })
+    .limit(30)
+    .returns<RecentLog[]>();
 
   const logsByDate = new Map((weeklyLogs ?? []).map((log) => [log.log_date, log]));
   const range = buildDateRange(startDate, 7).map((day) => ({
