@@ -21,10 +21,10 @@ type RecentLog = {
   log_date: string;
 };
 
-type WeightHistoryRow = {
-  log_date: string;
-  weight: number | null;
-};
+type LifetimeLog = Pick<
+  WeeklyLog,
+  "calories_intake" | "basal_calories" | "active_calories"
+>;
 
 function buildDateRange(start: Date, days: number, offset?: number) {
   return Array.from({ length: days }, (_, index) => {
@@ -87,13 +87,11 @@ export default async function TrendsPage() {
     .limit(30)
     .returns<RecentLog[]>();
 
-  const { data: weightHistory } = await supabase
+  const { data: lifetimeLogs } = await supabase
     .from("daily_logs")
-    .select("log_date, weight")
+    .select("calories_intake, basal_calories, active_calories")
     .eq("user_id", session?.user.id ?? "")
-    .not("weight", "is", null)
-    .order("log_date", { ascending: true })
-    .returns<WeightHistoryRow[]>();
+    .returns<LifetimeLog[]>();
 
   const logsByDate = new Map((weeklyLogs ?? []).map((log) => [log.log_date, log]));
   const range = buildDateRange(startDate, 7, timezoneOffset).map((day) => ({
@@ -166,16 +164,20 @@ export default async function TrendsPage() {
   const compliance = Math.round((loggedDays / range.length) * 100);
 
   const streak = calculateStreak(recentLogs ?? [], todayIso, timezoneOffset);
-  let lifetimeWeightDelta: number | null = null;
+  const lifetimeNetCalories = (lifetimeLogs ?? []).reduce<number>((sum, log) => {
+    return (
+      sum +
+      calculateNetCalories({
+        calories_intake: log.calories_intake ?? 0,
+        basal_calories: log.basal_calories ?? 0,
+        active_calories: log.active_calories ?? 0,
+      })
+    );
+  }, 0);
 
-  if (weightHistory && weightHistory.length >= 2) {
-    const first = weightHistory[0]?.weight ?? null;
-    const last = weightHistory[weightHistory.length - 1]?.weight ?? null;
-
-    if (typeof first === "number" && typeof last === "number") {
-      lifetimeWeightDelta = Math.round((last - first) * 10) / 10;
-    }
-  }
+  const lifetimeWeightLost = lifetimeNetCalories < 0
+    ? Math.round((Math.abs(lifetimeNetCalories) / 3500) * 10) / 10
+    : 0;
 
   return (
     <MobileShell
@@ -194,18 +196,11 @@ export default async function TrendsPage() {
           </div>
           <div className="flex flex-col items-end gap-2 text-xs font-semibold text-slate-300">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
-              {averageWeightChange} lb change (week)
+              {averageWeightChange} lb est. this week
             </span>
-            {lifetimeWeightDelta !== null ? (
-              <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-3 py-1 text-slate-200">
-                Total {lifetimeWeightDelta * -1 >= 0 ? "-" : "+"}
-                {Math.abs(lifetimeWeightDelta)} lb overall
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/70 px-3 py-1 text-slate-400">
-                Log weight to track total change
-              </span>
-            )}
+            <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-3 py-1 text-slate-200">
+              Total {lifetimeWeightLost > 0 ? `-${lifetimeWeightLost}` : "0"} lb from logged deficit
+            </span>
           </div>
         </div>
         <div className="text-xs text-slate-400">
