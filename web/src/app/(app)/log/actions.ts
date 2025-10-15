@@ -113,10 +113,10 @@ export async function upsertDailyLogAction(
     .returns<Pick<Database["public"]["Tables"]["daily_logs"]["Row"], "id">[]>()
     .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return {
       status: "error",
-      message: error.message ?? "Unable to save daily log.",
+      message: error?.message ?? "Unable to save daily log.",
     };
   }
 
