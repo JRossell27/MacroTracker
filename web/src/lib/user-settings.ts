@@ -98,9 +98,15 @@ export async function fetchUserSettings(
     .from("user_settings")
     .select("*")
     .eq("user_id", userId)
+    .returns<UserSettingsRecord[]>()
     .maybeSingle();
 
-  return normalizeUserSettings(data ?? null);
+  const safeRow =
+    data && typeof data === "object" && "user_id" in data
+      ? (data as UserSettingsRecord)
+      : null;
+
+  return normalizeUserSettings(safeRow);
 }
 
 export async function mergeUserSettings(
@@ -113,9 +119,15 @@ export async function mergeUserSettings(
     .from("user_settings")
     .select("*")
     .eq("user_id", userId)
+    .returns<UserSettingsRecord[]>()
     .maybeSingle();
 
-  if (!data) {
+  const existing =
+    data && typeof data === "object" && "user_id" in data
+      ? (data as UserSettingsRecord)
+      : null;
+
+  if (!existing) {
     const insertPayload: Database["public"]["Tables"]["user_settings"]["Insert"] =
       {
         user_id: userId,
@@ -129,6 +141,7 @@ export async function mergeUserSettings(
       .from("user_settings")
       .insert(insertPayload)
       .select("*")
+      .returns<UserSettingsRecord[]>()
       .maybeSingle();
 
     return (inserted ?? {
@@ -146,7 +159,7 @@ export async function mergeUserSettings(
     .throwOnError();
 
   return {
-    ...(data as UserSettingsRecord),
+    ...existing,
     ...update,
     updated_at: timestamp,
   };
