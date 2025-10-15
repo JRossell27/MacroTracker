@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
 import { TIMEZONE_COOKIE } from "./timezone-constants";
 
-export function readTimezoneOffsetFromCookies(): number | undefined {
-  const raw = cookies().get(TIMEZONE_COOKIE)?.value;
+export async function readTimezoneOffsetFromCookies(): Promise<
+  number | undefined
+> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(TIMEZONE_COOKIE)?.value;
   if (!raw) {
     return undefined;
   }

@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const today = getLocalISODate(new Date(), timezoneOffset);
 
   const { data: log } = await supabase

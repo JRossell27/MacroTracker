@@ -98,7 +98,7 @@ export async function upsertDailyLogAction(
     return { status: "error", message: "You need to sign in again." };
   }
 
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const logDate =
     String(formData.get("logDate") ?? "") ||
     getLocalISODate(new Date(), timezoneOffset);
@@ -342,7 +342,7 @@ export async function applyGoalRecommendationAction(
     return { status: "error", message: "Unable to read recommendation payload." };
   }
 
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const logDate =
     payload.logDate ||
     String(formData.get("logDate") ?? "") ||
@@ -473,7 +473,7 @@ export async function addHydrationAction(
   ).trim();
   const amount = Number(amountRaw || 0);
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const logDate =
     String(formData.get("logDate") ?? "") ||
     getLocalISODate(new Date(), timezoneOffset);
@@ -575,7 +575,7 @@ export async function updateActiveCaloriesAction(
   const amountRaw = String(formData.get("amount") ?? "").trim();
   const amount = Number(amountRaw || 0);
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const logDate =
     String(formData.get("logDate") ?? "") ||
     getLocalISODate(new Date(), timezoneOffset);

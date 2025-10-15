@@ -56,7 +56,7 @@ export default async function TrendsPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const today = new Date();
   const todayIso = getLocalISODate(today, timezoneOffset);
   const startDate = new Date(today);

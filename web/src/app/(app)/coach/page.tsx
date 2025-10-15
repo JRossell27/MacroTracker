@@ -39,7 +39,7 @@ export default async function CoachPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const timezoneOffset = readTimezoneOffsetFromCookies();
+  const timezoneOffset = await readTimezoneOffsetFromCookies();
   const todayIso = getLocalISODate(new Date(), timezoneOffset);
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 6);
