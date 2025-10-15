@@ -65,7 +65,7 @@ async function recalculateDailyTotals(
 
   await supabase
     .from("daily_logs")
-    .update(totalsUpdate)
+    .update<Database["public"]["Tables"]["daily_logs"]["Update"]>(totalsUpdate)
     .eq("id", dailyLogId);
 }
 
@@ -112,7 +112,8 @@ export async function upsertDailyLogAction(
     .from("daily_logs")
     .upsert(payload, { onConflict: "user_id,log_date" })
     .select("id")
-    .single();
+    .returns<Pick<Database["public"]["Tables"]["daily_logs"]["Row"], "id">[]>()
+    .maybeSingle();
 
   if (error) {
     return {
@@ -151,7 +152,7 @@ export async function addMealAction(
     return { status: "error", message: "Add a name for your meal." };
   }
 
-  const { error } = await supabase.from("meals").insert({
+  const mealInsert: Database["public"]["Tables"]["meals"]["Insert"] = {
     daily_log_id: dailyLogId,
     name,
     logged_at: loggedAt || null,
@@ -159,7 +160,9 @@ export async function addMealAction(
     protein: toNumber(formData.get("mealProtein"), 0),
     carbs: toNumber(formData.get("mealCarbs"), 0),
     fat: toNumber(formData.get("mealFat"), 0),
-  });
+  };
+
+  const { error } = await supabase.from("meals").insert(mealInsert);
 
   if (error) {
     return {
@@ -203,10 +206,12 @@ export async function addNoteAction(
     return { status: "error", message: "Write a note before saving." };
   }
 
-  const { error } = await supabase.from("daily_notes").insert({
+  const noteInsert: Database["public"]["Tables"]["daily_notes"]["Insert"] = {
     daily_log_id: dailyLogId,
     note,
-  });
+  };
+
+  const { error } = await supabase.from("daily_notes").insert(noteInsert);
 
   if (error) {
     return { status: "error", message: error.message ?? "Unable to save note." };
