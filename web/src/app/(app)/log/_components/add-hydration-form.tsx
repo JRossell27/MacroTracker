@@ -10,7 +10,7 @@ type AddHydrationFormProps = {
   logDate: string;
 };
 
-export export const QUICK_HYDRATION_AMOUNTS = [8, 12, 16, 20];
+export const QUICK_HYDRATION_AMOUNTS = [8, 12, 16, 20];
 
 export function AddHydrationForm({
   dailyLogId,
@@ -28,7 +28,7 @@ export function AddHydrationForm({
       <input type="hidden" name="dailyLogId" value={dailyLogId ?? ""} />
       <input type="hidden" name="logDate" value={logDate} />
       <div className="flex flex-wrap gap-2">
-        {QUICK_AMOUNTS.map((amount) => (
+        {QUICK_HYDRATION_AMOUNTS.map((amount) => (
           <button
             key={amount}
             type="submit"
