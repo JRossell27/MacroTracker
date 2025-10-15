@@ -9,6 +9,19 @@ export async function createSupabaseServerClient(): Promise<
 > {
   const requestCookies = await cookies();
 
+  const swallowMutationError = (error: unknown) => {
+    if (
+      error instanceof Error &&
+      error.message.includes(
+        "Cookies can only be modified in a Server Action or Route Handler",
+      )
+    ) {
+      return;
+    }
+
+    throw error;
+  };
+
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,10 +31,18 @@ export async function createSupabaseServerClient(): Promise<
           return requestCookies.get(name)?.value ?? null;
         },
         set(name: string, value: string, options: CookieOptions) {
-          requestCookies.set({ name, value, ...options });
+          try {
+            requestCookies.set({ name, value, ...options });
+          } catch (error) {
+            swallowMutationError(error);
+          }
         },
         remove(name: string, options: CookieOptions) {
-          requestCookies.delete({ name, ...options });
+          try {
+            requestCookies.delete({ name, ...options });
+          } catch (error) {
+            swallowMutationError(error);
+          }
         },
       },
     },
