@@ -34,6 +34,17 @@ export async function signInAction(
     return { status: "error", message: error.message };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    await supabase
+      .from("profiles")
+      .upsert({ id: user.id, display_name: user.user_metadata?.full_name ?? null })
+      .throwOnError();
+  }
+
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
@@ -63,10 +74,16 @@ export async function signUpAction(
     return { status: "error", message: error.message };
   }
 
-  if (data.user) {
+  const sessionUser = data.session?.user;
+
+  if (sessionUser) {
     const profileUpsert = {
-      id: data.user.id,
-      display_name: displayName || null,
+      id: sessionUser.id,
+      display_name:
+        displayName ||
+        sessionUser.user_metadata?.full_name ||
+        sessionUser.email ||
+        null,
     } satisfies Database["public"]["Tables"]["profiles"]["Insert"];
 
     await supabase
