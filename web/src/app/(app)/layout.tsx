@@ -35,25 +35,20 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="relative min-h-dvh bg-transparent">
+    <div className="relative flex min-h-dvh flex-col gap-6 px-4 pb-24 pt-6">
       <TimezoneSync />
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-sky-500/20 via-sky-500/5 to-transparent blur-3xl" />
-      <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-6 px-4 pb-32 pt-6 sm:max-w-4xl sm:px-6">
-        <header className="surface flex items-center justify-between px-5 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-500">
-              Logged in
-            </p>
-            <p className="text-sm font-semibold text-slate-200">
-              {displayName}
-            </p>
-          </div>
-          <form action={signOutAction}>
-            <SignOutButton />
-          </form>
-        </header>
-        <div className="flex flex-1 flex-col gap-6 pb-6">{children}</div>
-      </div>
+      <header className="flex items-center justify-between rounded-2xl border border-slate-800/70 bg-slate-900/40 px-4 py-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-500">
+            Logged in
+          </p>
+          <p className="text-sm font-semibold text-slate-200">{displayName}</p>
+        </div>
+        <form action={signOutAction}>
+          <SignOutButton />
+        </form>
+      </header>
+      <div className="flex flex-1 flex-col gap-6">{children}</div>
       <MobileNav />
     </div>
   );

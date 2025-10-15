@@ -1,12 +1,10 @@
-import Link from "next/link";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { Progress } from "@/components/ui/progress";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate, parseISODate } from "@/lib/date";
 import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
 import { calculateNetCalories } from "@/lib/nutrition";
-import { CalendarCheck, Flame, Trophy, LineChart } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarCheck, Flame, Trophy } from "lucide-react";
 
 type WeeklyLog = {
   log_date: string;
@@ -155,29 +153,6 @@ export default async function TrendsPage() {
   const compliance = Math.round((loggedDays / range.length) * 100);
 
   const streak = calculateStreak(recentLogs ?? [], todayIso, timezoneOffset);
-
-  if (loggedDays === 0) {
-    return (
-      <MobileShell
-        title="Trends"
-        subtitle="We need at least one logged day to chart your progress."
-      >
-        <EmptyState
-          icon={<LineChart className="h-5 w-5" />}
-          title="No trend data yet"
-          description="Log meals and hydration in your daily log to unlock weekly charts and insights."
-          action={
-            <Link
-              href="/log"
-              className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
-            >
-              Jump to daily log
-            </Link>
-          }
-        />
-      </MobileShell>
-    );
-  }
 
   return (
     <MobileShell

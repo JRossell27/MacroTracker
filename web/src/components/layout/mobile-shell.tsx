@@ -30,7 +30,7 @@ export function MobileShell({
           {headerAction}
         </header>
       )}
-      <main className="flex flex-1 flex-col gap-6">{children}</main>
+      <main className="flex flex-1 flex-col gap-4">{children}</main>
     </div>
   );
 }

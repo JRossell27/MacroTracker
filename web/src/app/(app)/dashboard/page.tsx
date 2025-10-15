@@ -9,14 +9,12 @@ import {
   calculateNetCalories,
   estimateWeightChange,
 } from "@/lib/nutrition";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
   Activity,
   Flame,
   Droplet,
   TrendingDown,
   TrendingUp,
-  ListPlus,
 } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 
@@ -118,38 +116,6 @@ export default async function DashboardPage() {
       unit: "g",
     },
   ];
-
-  if (!log) {
-    return (
-      <MobileShell
-        title="Dashboard"
-        subtitle="We’ll populate trends once you log your first day."
-        headerAction={
-          <Link
-            href="/log"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-700/60 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900/80"
-          >
-            <Flame className="h-4 w-4 text-sky-400" />
-            Log food
-          </Link>
-        }
-      >
-        <EmptyState
-          icon={<ListPlus className="h-5 w-5" />}
-          title="No entries logged today"
-          description="Head to your daily log to set today’s summary and start adding meals, hydration, and notes."
-          action={
-            <Link
-              href="/log"
-              className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
-            >
-              Open daily log
-            </Link>
-          }
-        />
-      </MobileShell>
-    );
-  }
 
   return (
     <MobileShell
