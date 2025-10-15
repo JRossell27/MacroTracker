@@ -20,6 +20,7 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string | null;
         };
+        Relationships: [];
       };
       daily_logs: {
         Row: {
@@ -82,6 +83,7 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string | null;
         };
+        Relationships: [];
       };
       meals: {
         Row: {
@@ -117,6 +119,7 @@ export type Database = {
           fat?: number | null;
           created_at?: string | null;
         };
+        Relationships: [];
       };
       meal_items: {
         Row: {
@@ -149,6 +152,7 @@ export type Database = {
           carbs?: number | null;
           fat?: number | null;
         };
+        Relationships: [];
       };
       daily_notes: {
         Row: {
@@ -169,6 +173,7 @@ export type Database = {
           note?: string;
           created_at?: string | null;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
