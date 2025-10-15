@@ -19,6 +19,9 @@ export function AuthForms() {
     INITIAL_STATE,
   );
 
+  const currentSignInState = signInState ?? INITIAL_STATE;
+  const currentSignUpState = signUpState ?? INITIAL_STATE;
+
   return (
     <div className="space-y-10">
       <section className="space-y-4">
@@ -57,9 +60,9 @@ export function AuthForms() {
               />
             </label>
           </div>
-          {signInState.status === "error" && (
+          {currentSignInState.status === "error" && (
             <p className="text-sm text-rose-400">
-              {signInState.message ?? "Unable to sign in. Try again."}
+              {currentSignInState.message ?? "Unable to sign in. Try again."}
             </p>
           )}
           <button
@@ -127,9 +130,9 @@ export function AuthForms() {
               />
             </label>
           </div>
-          {signUpState.status === "error" && (
+          {currentSignUpState.status === "error" && (
             <p className="text-sm text-rose-400">
-              {signUpState.message ?? "Unable to create an account. Try again."}
+              {currentSignUpState.message ?? "Unable to create an account. Try again."}
             </p>
           )}
           <button
