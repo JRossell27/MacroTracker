@@ -26,21 +26,23 @@ const FALLBACK_BMR = {
   sex: "male" as BiologicalSex,
 };
 
-const INITIAL_SETTINGS_ROW: Database["public"]["Tables"]["user_settings"]["Insert"] =
-  {
-    calories_goal: FALLBACK_GOALS.calories,
-    protein_goal: FALLBACK_GOALS.protein,
-    carbs_goal: FALLBACK_GOALS.carbs,
-    fat_goal: FALLBACK_GOALS.fat,
-    basal_calories: FALLBACK_GOALS.basal,
-    active_calories: FALLBACK_GOALS.active,
-    hydration_target_oz: FALLBACK_GOALS.hydrationTarget,
-    weight_lbs: FALLBACK_WEIGHT,
-    bmr_weight_lbs: FALLBACK_BMR.weightLbs,
-    bmr_height_inches: FALLBACK_BMR.heightInches,
-    bmr_age: FALLBACK_BMR.age,
-    bmr_sex: FALLBACK_BMR.sex,
-  };
+const INITIAL_SETTINGS_ROW = {
+  calories_goal: FALLBACK_GOALS.calories,
+  protein_goal: FALLBACK_GOALS.protein,
+  carbs_goal: FALLBACK_GOALS.carbs,
+  fat_goal: FALLBACK_GOALS.fat,
+  basal_calories: FALLBACK_GOALS.basal,
+  active_calories: FALLBACK_GOALS.active,
+  hydration_target_oz: FALLBACK_GOALS.hydrationTarget,
+  weight_lbs: FALLBACK_WEIGHT,
+  bmr_weight_lbs: FALLBACK_BMR.weightLbs,
+  bmr_height_inches: FALLBACK_BMR.heightInches,
+  bmr_age: FALLBACK_BMR.age,
+  bmr_sex: FALLBACK_BMR.sex,
+} satisfies Omit<
+  Database["public"]["Tables"]["user_settings"]["Insert"],
+  "user_id"
+>;
 
 export type NormalizedUserSettings = {
   goals: {
