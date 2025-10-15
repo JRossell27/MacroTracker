@@ -8,42 +8,18 @@ import { DailySummaryForm } from "./_components/daily-summary-form";
 import { AddMealForm } from "./_components/add-meal-form";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
+import type { Database } from "@/lib/database.types";
 
-type Meal = {
-  id: string;
-  name: string;
-  logged_at: string | null;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  created_at: string | null;
-};
+type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
+type MealRow = Database["public"]["Tables"]["meals"]["Row"];
+type NoteRow = Database["public"]["Tables"]["daily_notes"]["Row"];
 
-type DailyNote = {
-  id: string;
-  note: string;
-  created_at: string | null;
-};
-
-type DailyLog = {
-  id: string;
-  log_date: string;
-  calories_goal: number;
-  protein_goal: number;
-  carbs_goal: number;
-  fat_goal: number;
-  basal_calories: number | null;
-  active_calories: number | null;
-  hydration_target_oz: number | null;
-  hydration_oz: number | null;
-  weight: number | null;
-  calories_intake: number | null;
-  protein_intake: number | null;
-  carbs_intake: number | null;
-  fat_intake: number | null;
-  meals: Meal[];
-  daily_notes: DailyNote[];
+type DailyLogWithRelations = DailyLogRow & {
+  meals: Pick<
+    MealRow,
+    "id" | "name" | "logged_at" | "calories" | "protein" | "carbs" | "fat" | "created_at"
+  >[];
+  daily_notes: Pick<NoteRow, "id" | "note" | "created_at">[];
 };
 
 const DEFAULT_GOALS = {
@@ -106,7 +82,8 @@ export default async function LogPage() {
     .eq("log_date", today)
     .order("logged_at", { foreignTable: "meals", ascending: true, nullsFirst: true })
     .order("created_at", { foreignTable: "daily_notes", ascending: false })
-    .maybeSingle<DailyLog>();
+    .returns<DailyLogWithRelations[]>()
+    .maybeSingle();
 
   const meals = log?.meals ?? [];
   const notes = log?.daily_notes ?? [];

@@ -15,29 +15,15 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import type { Database } from "@/lib/database.types";
 
-type DailyNote = {
-  id: string;
-  note: string;
-};
+type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
+type MealRow = Database["public"]["Tables"]["meals"]["Row"];
+type NoteRow = Database["public"]["Tables"]["daily_notes"]["Row"];
 
-type DailyLog = {
-  id: string;
-  log_date: string;
-  calories_goal: number;
-  protein_goal: number;
-  carbs_goal: number;
-  fat_goal: number;
-  calories_intake: number | null;
-  protein_intake: number | null;
-  carbs_intake: number | null;
-  fat_intake: number | null;
-  active_calories: number | null;
-  basal_calories: number | null;
-  hydration_oz: number | null;
-  hydration_target_oz: number | null;
-  meals: Meal[];
-  daily_notes: DailyNote[];
+type DailyLogWithRelations = DailyLogRow & {
+  meals: Pick<MealRow, "calories" | "protein" | "carbs" | "fat">[];
+  daily_notes: Pick<NoteRow, "id" | "note">[];
 };
 
 export default async function DashboardPage() {
@@ -66,13 +52,14 @@ export default async function DashboardPage() {
         basal_calories,
         hydration_oz,
         hydration_target_oz,
-  meals (calories, protein, carbs, fat),
+        meals (calories, protein, carbs, fat),
         daily_notes (id, note)
       `,
     )
     .eq("user_id", session?.user.id ?? "")
     .eq("log_date", today)
-    .maybeSingle<DailyLog>();
+    .returns<DailyLogWithRelations[]>()
+    .maybeSingle();
 
   const meals = log?.meals ?? [];
   const notes = log?.daily_notes ?? [];

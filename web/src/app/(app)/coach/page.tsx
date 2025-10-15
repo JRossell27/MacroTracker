@@ -12,36 +12,19 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import type { Database } from "@/lib/database.types";
 
-type DailyNote = {
-  id: string;
-  note: string;
+type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
+type NoteRow = Database["public"]["Tables"]["daily_notes"]["Row"];
+
+type DailyLogWithNotes = DailyLogRow & {
+  daily_notes: Pick<NoteRow, "id" | "note">[];
 };
 
-type DailyLog = {
-  id: string;
-  log_date: string;
-  calories_goal: number;
-  protein_goal: number;
-  carbs_goal: number;
-  fat_goal: number;
-  calories_intake: number | null;
-  protein_intake: number | null;
-  carbs_intake: number | null;
-  fat_intake: number | null;
-  hydration_oz: number | null;
-  hydration_target_oz: number | null;
-  active_calories: number | null;
-  basal_calories: number | null;
-  weight: number | null;
-  daily_notes: DailyNote[];
-};
-
-type WeeklyLog = {
-  calories_intake: number | null;
-  active_calories: number | null;
-  basal_calories: number | null;
-};
+type WeeklyLog = Pick<
+  DailyLogRow,
+  "calories_intake" | "active_calories" | "basal_calories"
+>;
 
 type Suggestion = {
   icon: ComponentType<{ className?: string }>;
@@ -67,7 +50,8 @@ export default async function CoachPage() {
     )
     .eq("user_id", session?.user.id ?? "")
     .eq("log_date", todayIso)
-    .maybeSingle<DailyLog>();
+    .returns<DailyLogWithNotes[]>()
+    .maybeSingle();
 
   const { data: weeklyLogs } = await supabase
     .from("daily_logs")
