@@ -95,9 +95,10 @@ export default async function LogPage() {
   const actualCarbs = log?.carbs_intake ?? mealTotals.carbs;
   const actualFat = log?.fat_intake ?? mealTotals.fat;
 
+  const safeCalories = actualCalories ?? 0;
   const completion =
     log?.calories_goal && log.calories_goal > 0
-      ? Math.min(100, Math.round((actualCalories / log.calories_goal) * 100))
+      ? Math.min(100, Math.round((safeCalories / log.calories_goal) * 100))
       : 0;
 
   const summaryDefaults = {
