@@ -11,7 +11,7 @@ export type AuthActionState = {
 };
 
 export async function signInAction(
-  _prevState: AuthActionState,
+  _prevState: AuthActionState | void,
   formData: FormData,
 ): Promise<AuthActionState | void> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -39,7 +39,7 @@ export async function signInAction(
 }
 
 export async function signUpAction(
-  _prevState: AuthActionState,
+  _prevState: AuthActionState | void,
   formData: FormData,
 ): Promise<AuthActionState | void> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
