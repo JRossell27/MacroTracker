@@ -21,13 +21,6 @@ type DailyNote = {
   note: string;
 };
 
-type Meal = {
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-};
-
 type DailyLog = {
   id: string;
   log_date: string;
@@ -73,7 +66,7 @@ export default async function DashboardPage() {
         basal_calories,
         hydration_oz,
         hydration_target_oz,
-        meals (calories, protein, carbs, fat),
+  meals (calories, protein, carbs, fat),
         daily_notes (id, note)
       `,
     )
@@ -83,7 +76,7 @@ export default async function DashboardPage() {
 
   const meals = log?.meals ?? [];
   const notes = log?.daily_notes ?? [];
-  const mealTotals = calculateMealTotals(meals as Meal[]);
+  const mealTotals = calculateMealTotals(meals);
 
   const actualCalories = log?.calories_intake ?? mealTotals.calories;
   const actualProtein = log?.protein_intake ?? mealTotals.protein;

@@ -1,6 +1,9 @@
 import type { Database } from "./database.types";
 
-type MealRow = Database["public"]["Tables"]["meals"]["Row"];
+type MealRow = Pick<
+  Database["public"]["Tables"]["meals"]["Row"],
+  "calories" | "protein" | "carbs" | "fat"
+> & Record<string, unknown>;
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
 
 export function calculateMealTotals(meals: MealRow[] = []) {
