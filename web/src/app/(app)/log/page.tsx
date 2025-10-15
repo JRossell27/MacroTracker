@@ -35,7 +35,7 @@ const DEFAULT_GOALS = {
 };
 
 export default async function LogPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

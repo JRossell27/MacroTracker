@@ -24,7 +24,7 @@ function toNumber(value: FormDataEntryValue | null, fallback = 0) {
 }
 
 async function recalculateDailyTotals(
-  supabase: ReturnType<typeof createSupabaseServerClient>,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   dailyLogId: string,
 ) {
   const { data: meals } = await supabase
@@ -77,7 +77,7 @@ export async function upsertDailyLogAction(
   _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -129,7 +129,7 @@ export async function addMealAction(
   _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -175,7 +175,7 @@ export async function addMealAction(
 }
 
 export async function deleteMealAction(formData: FormData) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const mealId = String(formData.get("mealId") ?? "");
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
 
@@ -192,7 +192,7 @@ export async function addNoteAction(
   _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
   const note = String(formData.get("note") ?? "").trim();
 
@@ -220,7 +220,7 @@ export async function addNoteAction(
 }
 
 export async function deleteNoteAction(formData: FormData) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const noteId = String(formData.get("noteId") ?? "");
 
   if (!noteId) return;

@@ -33,7 +33,7 @@ type Suggestion = {
 };
 
 export default async function CoachPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

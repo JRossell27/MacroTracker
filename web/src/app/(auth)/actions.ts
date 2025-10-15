@@ -24,7 +24,7 @@ export async function signInAction(
     };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -53,7 +53,7 @@ export async function signUpAction(
     };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -80,7 +80,7 @@ export async function signUpAction(
 }
 
 export async function signOutAction() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/signin");

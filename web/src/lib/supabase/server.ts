@@ -4,8 +4,10 @@ import type { CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../database.types";
 
-export function createSupabaseServerClient(): SupabaseClient<Database> {
-  const requestCookies = cookies();
+export async function createSupabaseServerClient(): Promise<
+  SupabaseClient<Database>
+> {
+  const requestCookies = await cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

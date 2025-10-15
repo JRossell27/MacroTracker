@@ -49,7 +49,7 @@ function calculateStreak(logDates: RecentLog[], todayIso: string) {
 }
 
 export default async function TrendsPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
