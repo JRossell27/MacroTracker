@@ -85,6 +85,7 @@ export default async function LogPage() {
     .returns<DailyLogWithRelations[]>()
     .maybeSingle();
 
+  const dailyLogId = log?.id ?? null;
   const meals = log?.meals ?? [];
   const notes = log?.daily_notes ?? [];
 
