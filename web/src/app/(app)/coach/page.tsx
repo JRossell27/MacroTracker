@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import Link from "next/link";
 import { MobileShell } from "@/components/layout/mobile-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate } from "@/lib/date";
@@ -13,6 +14,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Database } from "@/lib/database.types";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
@@ -97,6 +99,31 @@ export default async function CoachPage() {
   const proteinGap = Math.max(0, proteinGoal - proteinActual);
 
   const suggestions: Suggestion[] = [];
+
+  const hasAnyData = Boolean(todayLog) || (weeklyLogs?.length ?? 0) > 0;
+
+  if (!hasAnyData) {
+    return (
+      <MobileShell
+        title="Coach"
+        subtitle="Get personalised coaching once you’ve logged your first day."
+      >
+        <EmptyState
+          icon={<Target className="h-5 w-5" />}
+          title="No coaching insights yet"
+          description="Log today’s summary, meals, and hydration to unlock tailored suggestions and next actions."
+          action={
+            <Link
+              href="/log"
+              className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
+            >
+              Jump to daily log
+            </Link>
+          }
+        />
+      </MobileShell>
+    );
+  }
 
   if (!todayLog) {
     suggestions.push({

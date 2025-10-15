@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { clsx } from "clsx";
 import type { LucideIcon } from "lucide-react";
 import {
   Home,
@@ -29,7 +30,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="surface fixed inset-x-0 bottom-4 mx-auto flex w-[min(19rem,calc(100%-2rem))] items-center justify-between gap-2 px-4 py-2 shadow-lg">
+    <nav className="surface fixed inset-x-0 bottom-4 z-50 mx-auto flex w-[min(22rem,calc(100%-2rem))] items-center justify-between gap-2 px-3 py-2 shadow-xl backdrop-blur">
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const isActive =
@@ -39,22 +40,23 @@ export function MobileNav() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium text-slate-400 transition-colors"
+            className={clsx(
+              "group flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/70",
+              isActive
+                ? "bg-slate-800/70 text-slate-50 shadow-[0_10px_30px_rgba(8,112,184,0.35)]"
+                : "text-slate-500 hover:text-slate-200",
+            )}
             aria-label={item.label}
             data-active={isActive}
+            aria-current={isActive ? "page" : undefined}
           >
             <Icon
-              className={`h-5 w-5 transition-colors ${
-                isActive ? "text-sky-400" : "text-slate-500"
-              }`}
+              className={clsx(
+                "h-5 w-5 transition-colors",
+                isActive ? "text-sky-400" : "text-slate-500 group-hover:text-slate-200",
+              )}
             />
-            <span
-              className={`transition-colors ${
-                isActive ? "text-slate-50" : "text-slate-500"
-              }`}
-            >
-              {item.label}
-            </span>
+            <span>{item.label}</span>
           </Link>
         );
       })}

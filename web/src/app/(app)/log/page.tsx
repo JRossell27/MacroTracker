@@ -9,12 +9,16 @@ import { QuickRecipesPanel } from "./_components/quick-recipes-panel";
 import { AddHydrationForm } from "./_components/add-hydration-form";
 import { ActiveCaloriesForm } from "./_components/active-calories-form";
 import { AddNoteForm } from "./_components/add-note-form";
+import { DailySummaryForm } from "./_components/daily-summary-form";
 import { calculateMealTotals } from "@/lib/nutrition";
 import {
   FALLBACK_USER_SETTINGS,
   fetchUserSettings,
+  inchesToFeetAndInches,
 } from "@/lib/user-settings";
 import { readTimezoneOffsetFromCookies } from "@/lib/timezone.server";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarPlus, StickyNote, UtensilsCrossed } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
@@ -121,6 +125,16 @@ export default async function LogPage() {
     weight: log?.weight ?? userSettings.weightLbs,
   };
 
+  const heightParts = inchesToFeetAndInches(userSettings.bmr.heightInches);
+  const bmrDefaults = {
+    weightLbs: userSettings.bmr.weightLbs,
+    heightFeet: Math.max(4, heightParts.feet || 0),
+    heightInches: Math.min(11, Math.max(0, heightParts.inches || 0)),
+    age: userSettings.bmr.age,
+    sex: userSettings.bmr.sex,
+    basalEstimate: userSettings.goals.basal,
+  };
+
   const displayDate = formatDisplayDate(log?.log_date ?? today);
   const hydrationPercent =
     summaryDefaults.hydrationTarget > 0
@@ -133,198 +147,244 @@ export default async function LogPage() {
           ),
         )
       : 0;
+  const hasDailySummary = Boolean(dailyLogId);
 
   return (
     <MobileShell
       title="Daily log"
       subtitle={`Entries for ${displayDate}`}
     >
-      <section className="surface space-y-5 p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Nutrition logged
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-50">
-              {safeCalories} kcal
-            </h2>
-          </div>
-          <span className="rounded-full bg-slate-800/70 px-3 py-1 text-xs font-semibold text-slate-300">
-            {completion}% of target
-          </span>
-        </div>
-        <Progress value={completion} />
-        <div className="grid gap-3 text-sm text-slate-300">
-          <div className="flex items-center justify-between">
-            <span>Protein</span>
-            <span className="font-semibold text-slate-100">
-              {actualProtein}g
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Carbs</span>
-            <span className="font-semibold text-slate-100">
-              {actualCarbs}g
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Fat</span>
-            <span className="font-semibold text-slate-100">
-              {actualFat}g
-            </span>
-          </div>
-        </div>
-      </section>
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="card space-y-5 p-5">
-          <header>
-            <h3 className="text-lg font-semibold text-slate-100">
-              Hydration
-            </h3>
-            <p className="text-xs text-slate-400">
-              Log ounces to keep pace with your target.
-            </p>
-          </header>
-          <Progress value={hydrationPercent} showLabel />
-          <div className="text-sm text-slate-300">
-            <p>
-              {summaryDefaults.hydrationActual} / {summaryDefaults.hydrationTarget} oz
-            </p>
-            <p className="text-xs text-slate-500">
-              Tip: aim for half your target before midday.
-            </p>
-          </div>
-          <AddHydrationForm
-            dailyLogId={dailyLogId}
-            logDate={log?.log_date ?? today}
-          />
-        </div>
-
-        <div className="card space-y-5 p-5">
-          <header>
-            <h3 className="text-lg font-semibold text-slate-100">
-              Activity & stats
-            </h3>
-            <p className="text-xs text-slate-400">
-              Update your burn manually or copy from your wearable once synced.
-            </p>
-          </header>
-          <ul className="space-y-3 text-sm text-slate-300">
-            <li className="flex items-center justify-between">
-              <span>Scale weight</span>
-              <span className="font-semibold text-slate-50">
-                {summaryDefaults.weight ? `${summaryDefaults.weight} lb` : "—"}
-              </span>
-            </li>
-            <li className="flex items-center justify-between">
-              <span>Basal calories</span>
-              <span className="font-semibold text-slate-50">
-                {summaryDefaults.basalCalories} kcal
-              </span>
-            </li>
-          </ul>
-          <ActiveCaloriesForm
-            dailyLogId={dailyLogId}
-            logDate={log?.log_date ?? today}
-            currentActive={summaryDefaults.activeCalories}
-          />
-        </div>
-      </section>
-
       <section className="card space-y-5 p-5">
-        <header>
-          <h3 className="text-lg font-semibold text-slate-100">
-            Add a meal
-          </h3>
-          <p className="text-xs text-slate-400">
-            Log calories and macros to keep your totals accurate.
+        <header className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-500">
+            Daily summary
           </p>
+          <h2 className="text-xl font-semibold text-slate-50">
+            Fine-tune today&apos;s targets
+          </h2>
         </header>
-        <QuickRecipesPanel recipes={recipes ?? []} dailyLogId={dailyLogId} />
-        <AddMealForm dailyLogId={dailyLogId} />
+        <DailySummaryForm
+          logDate={log?.log_date ?? today}
+          existing={hasDailySummary}
+          defaults={summaryDefaults}
+          bmrDefaults={bmrDefaults}
+        />
+        <p className="text-xs text-slate-500">
+          {hasDailySummary
+            ? "Update targets anytime—your meals and hydration will adjust instantly."
+            : "Save this summary to unlock hydration, activity, meals, and notes for the day."}
+        </p>
       </section>
 
-      <section className="space-y-4">
-        {meals.length === 0 ? (
-          <div className="surface p-5 text-sm text-slate-400">
-            No meals logged yet. Add your first meal to see macro breakdowns
-            here.
-          </div>
-        ) : (
-          meals.map((meal) => {
-            const displayTime = meal.logged_at
-              ? meal.logged_at.slice(0, 5)
-              : "—";
-            return (
-              <article key={meal.id} className="surface space-y-4 p-5">
-                <header className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-lg font-semibold text-slate-100">
-                      {meal.name}
-                    </h4>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
-                      {displayTime}
-                    </p>
-                  </div>
-                  <div className="text-right text-sm text-slate-300">
-                    <span className="block font-semibold text-slate-100">
-                      {meal.calories ?? 0} kcal
-                    </span>
-                    <span>
-                      {meal.protein ?? 0}P • {meal.carbs ?? 0}C •{" "}
-                      {meal.fat ?? 0}F
-                    </span>
-                  </div>
-                </header>
-                <footer className="flex items-center justify-end">
-                  <form action={deleteMealAction}>
-                    <input type="hidden" name="mealId" value={meal.id} />
-                    <input
-                      type="hidden"
-                      name="dailyLogId"
-                      value={log?.id ?? ""}
-                    />
-                    <InlineDeleteButton label="Delete meal" />
-                  </form>
-                </footer>
-              </article>
-            );
-          })
-        )}
-      </section>
+      {hasDailySummary ? (
+        <>
+          <section className="surface space-y-5 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-400">
+                  Nutrition logged
+                </p>
+                <h2 className="text-2xl font-semibold text-slate-50">
+                  {safeCalories} kcal
+                </h2>
+              </div>
+              <span className="rounded-full bg-slate-800/70 px-3 py-1 text-xs font-semibold text-slate-300">
+                {completion}% of target
+              </span>
+            </div>
+            <Progress value={completion} />
+            <div className="grid gap-3 text-sm text-slate-300">
+              <div className="flex items-center justify-between">
+                <span>Protein</span>
+                <span className="font-semibold text-slate-100">
+                  {actualProtein}g
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Carbs</span>
+                <span className="font-semibold text-slate-100">
+                  {actualCarbs}g
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Fat</span>
+                <span className="font-semibold text-slate-100">
+                  {actualFat}g
+                </span>
+              </div>
+            </div>
+          </section>
 
-      <section className="card space-y-5 p-5">
-        <header>
-          <h3 className="text-lg font-semibold text-slate-100">
-            Notes & observations
-          </h3>
-          <p className="text-xs text-slate-400">
-            Capture energy levels, cravings, or anything your coach should
-            know.
-          </p>
-        </header>
-        <AddNoteForm dailyLogId={log?.id ?? null} />
-        <ul className="space-y-3 text-sm text-slate-300">
-          {notes.length === 0 ? (
-            <li className="rounded-xl border border-slate-800/70 bg-slate-900/40 px-3 py-2 text-slate-500">
-              No notes yet. Add one above to build your coaching feed.
-            </li>
-          ) : (
-            notes.map((note) => (
-              <li
-                key={note.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-slate-800/70 bg-slate-900/40 px-3 py-3"
-              >
-                <span>{note.note}</span>
-                <form action={deleteNoteAction}>
-                  <input type="hidden" name="noteId" value={note.id} />
-                  <InlineDeleteButton label="Remove" />
-                </form>
-              </li>
-            ))
-          )}
-        </ul>
-      </section>
+          <section className="grid gap-4 md:grid-cols-2">
+            <div className="card space-y-5 p-5">
+              <header>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Hydration
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Log ounces to keep pace with your target.
+                </p>
+              </header>
+              <Progress value={hydrationPercent} showLabel />
+              <div className="text-sm text-slate-300">
+                <p>
+                  {summaryDefaults.hydrationActual} / {summaryDefaults.hydrationTarget} oz
+                </p>
+                <p className="text-xs text-slate-500">
+                  Tip: aim for half your target before midday.
+                </p>
+              </div>
+              <AddHydrationForm
+                dailyLogId={dailyLogId}
+                logDate={log?.log_date ?? today}
+              />
+            </div>
+
+            <div className="card space-y-5 p-5">
+              <header>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Activity & stats
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Keep weight and burn numbers current for accurate coaching.
+                </p>
+              </header>
+              <ul className="space-y-3 text-sm text-slate-300">
+                <li className="flex items-center justify-between">
+                  <span>Scale weight</span>
+                  <span className="font-semibold text-slate-50">
+                    {summaryDefaults.weight ? `${summaryDefaults.weight} lb` : "—"}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Basal calories</span>
+                  <span className="font-semibold text-slate-50">
+                    {summaryDefaults.basalCalories} kcal
+                  </span>
+                </li>
+              </ul>
+              <ActiveCaloriesForm
+                dailyLogId={dailyLogId}
+                logDate={log?.log_date ?? today}
+                currentActive={summaryDefaults.activeCalories}
+              />
+            </div>
+          </section>
+
+          <section className="card space-y-5 p-5">
+            <header>
+              <h3 className="text-lg font-semibold text-slate-100">
+                Add a meal
+              </h3>
+              <p className="text-xs text-slate-400">
+                Log calories and macros to keep your totals accurate.
+              </p>
+            </header>
+            <QuickRecipesPanel recipes={recipes ?? []} dailyLogId={dailyLogId} />
+            <AddMealForm dailyLogId={dailyLogId} />
+          </section>
+
+          <section className="space-y-4">
+            {meals.length === 0 ? (
+              <EmptyState
+                variant="subtle"
+                icon={<UtensilsCrossed className="h-5 w-5" />}
+                title="No meals logged yet"
+                description="Add your first meal to see macro breakdowns and timing here."
+                className="px-6 py-8 text-sm"
+              />
+            ) : (
+              meals.map((meal) => {
+                const displayTime = meal.logged_at
+                  ? meal.logged_at.slice(0, 5)
+                  : "—";
+                return (
+                  <article key={meal.id} className="surface space-y-4 p-5">
+                    <header className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-lg font-semibold text-slate-100">
+                          {meal.name}
+                        </h4>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          {displayTime}
+                        </p>
+                      </div>
+                      <div className="text-right text-sm text-slate-300">
+                        <span className="block font-semibold text-slate-100">
+                          {meal.calories ?? 0} kcal
+                        </span>
+                        <span>
+                          {meal.protein ?? 0}P • {meal.carbs ?? 0}C •{" "}
+                          {meal.fat ?? 0}F
+                        </span>
+                      </div>
+                    </header>
+                    <footer className="flex items-center justify-end">
+                      <form action={deleteMealAction}>
+                        <input type="hidden" name="mealId" value={meal.id} />
+                        <input
+                          type="hidden"
+                          name="dailyLogId"
+                          value={log?.id ?? ""}
+                        />
+                        <InlineDeleteButton label="Delete meal" />
+                      </form>
+                    </footer>
+                  </article>
+                );
+              })
+            )}
+          </section>
+
+          <section className="card space-y-5 p-5">
+            <header>
+              <h3 className="text-lg font-semibold text-slate-100">
+                Notes & observations
+              </h3>
+              <p className="text-xs text-slate-400">
+                Capture energy levels, cravings, or anything your coach should
+                know.
+              </p>
+            </header>
+            <AddNoteForm dailyLogId={log?.id ?? null} />
+            {notes.length === 0 ? (
+              <EmptyState
+                variant="subtle"
+                icon={<StickyNote className="h-5 w-5" />}
+                title="No notes yet"
+                description="Use notes to flag stand-out workouts, stress, or nutrition wins."
+                className="px-6 py-8 text-sm"
+              />
+            ) : (
+              <ul className="space-y-3 text-sm text-slate-300">
+                {notes.map((note) => (
+                  <li
+                    key={note.id}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-slate-800/70 bg-slate-900/40 px-3 py-3"
+                  >
+                    <span>{note.note}</span>
+                    <form action={deleteNoteAction}>
+                      <input type="hidden" name="noteId" value={note.id} />
+                      <InlineDeleteButton label="Remove" />
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : (
+        <EmptyState
+          icon={<CalendarPlus className="h-5 w-5" />}
+          title="Ready to start logging?"
+          description="Save your day summary above to unlock hydration, activity, meals, and notes for today."
+          action={
+            <span className="text-xs text-slate-500">
+              Tip: we already prefilled your targets based on recent days.
+            </span>
+          }
+        />
+      )}
     </MobileShell>
   );
 }
