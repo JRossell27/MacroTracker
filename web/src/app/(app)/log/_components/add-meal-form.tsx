@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { addMealAction, INITIAL_STATE } from "../actions";
+import { addMealAction } from "../actions";
+import { LOG_ACTION_INITIAL_STATE } from "../shared-state";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 
 type AddMealFormProps = {
@@ -10,7 +11,11 @@ type AddMealFormProps = {
 };
 
 export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
-  const [state, dispatch] = useActionState(addMealAction, INITIAL_STATE);
+  const [state, dispatch] = useActionState(
+    addMealAction,
+    LOG_ACTION_INITIAL_STATE,
+  );
+  const currentState = state ?? LOG_ACTION_INITIAL_STATE;
   const isDisabled = disabled || !dailyLogId;
 
   return (
@@ -90,9 +95,9 @@ export function AddMealForm({ dailyLogId, disabled }: AddMealFormProps) {
         </label>
       </div>
 
-      {state.status === "error" && (
+      {currentState.status === "error" && (
         <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-          {state.message ?? "Unable to add meal. Try again."}
+          {currentState.message ?? "Unable to add meal. Try again."}
         </p>
       )}
 

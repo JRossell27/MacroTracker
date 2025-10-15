@@ -4,13 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getLocalISODate } from "@/lib/date";
 import type { Database } from "@/lib/database.types";
-
-export type ActionResponse = {
-  status: "idle" | "error";
-  message?: string;
-};
-
-const INITIAL_STATE: ActionResponse = { status: "idle" };
+import {
+  LOG_ACTION_INITIAL_STATE,
+  type LogActionState,
+} from "./shared-state";
 
 const REVALIDATE_PATHS = ["/dashboard", "/log", "/trends", "/coach"];
 
@@ -74,9 +71,9 @@ function triggerRevalidate() {
 }
 
 export async function upsertDailyLogAction(
-  _prevState: ActionResponse,
+  _prevState: LogActionState | void,
   formData: FormData,
-): Promise<ActionResponse> {
+): Promise<LogActionState> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -122,13 +119,13 @@ export async function upsertDailyLogAction(
 
   await recalculateDailyTotals(supabase, data.id);
   triggerRevalidate();
-  return INITIAL_STATE;
+  return LOG_ACTION_INITIAL_STATE;
 }
 
 export async function addMealAction(
-  _prevState: ActionResponse,
+  _prevState: LogActionState | void,
   formData: FormData,
-): Promise<ActionResponse> {
+): Promise<LogActionState> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -171,7 +168,7 @@ export async function addMealAction(
 
   await recalculateDailyTotals(supabase, dailyLogId);
   triggerRevalidate();
-  return INITIAL_STATE;
+  return LOG_ACTION_INITIAL_STATE;
 }
 
 export async function deleteMealAction(formData: FormData) {
@@ -189,9 +186,9 @@ export async function deleteMealAction(formData: FormData) {
 }
 
 export async function addNoteAction(
-  _prevState: ActionResponse,
+  _prevState: LogActionState | void,
   formData: FormData,
-): Promise<ActionResponse> {
+): Promise<LogActionState> {
   const supabase = await createSupabaseServerClient();
   const dailyLogId = String(formData.get("dailyLogId") ?? "");
   const note = String(formData.get("note") ?? "").trim();
@@ -216,7 +213,7 @@ export async function addNoteAction(
   }
 
   triggerRevalidate();
-  return INITIAL_STATE;
+  return LOG_ACTION_INITIAL_STATE;
 }
 
 export async function deleteNoteAction(formData: FormData) {
@@ -228,5 +225,3 @@ export async function deleteNoteAction(formData: FormData) {
   await supabase.from("daily_notes").delete().eq("id", noteId);
   triggerRevalidate();
 }
-
-export { INITIAL_STATE };

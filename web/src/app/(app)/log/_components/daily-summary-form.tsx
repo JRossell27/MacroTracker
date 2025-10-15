@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { upsertDailyLogAction, INITIAL_STATE } from "../actions";
+import { upsertDailyLogAction } from "../actions";
+import { LOG_ACTION_INITIAL_STATE } from "../shared-state";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 
 type DailySummaryFormProps = {
@@ -33,8 +34,9 @@ export function DailySummaryForm({
 }: DailySummaryFormProps) {
   const [state, dispatch] = useActionState(
     upsertDailyLogAction,
-    INITIAL_STATE,
+    LOG_ACTION_INITIAL_STATE,
   );
+  const currentState = state ?? LOG_ACTION_INITIAL_STATE;
 
   return (
     <form action={dispatch} className="space-y-4">
@@ -154,9 +156,9 @@ export function DailySummaryForm({
         />
       </label>
 
-      {state.status === "error" && (
+      {currentState.status === "error" && (
         <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-          {state.message ?? "Unable to save. Try again."}
+          {currentState.message ?? "Unable to save. Try again."}
         </p>
       )}
 
