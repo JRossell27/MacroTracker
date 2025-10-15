@@ -11,7 +11,7 @@ export async function setTimezoneOffsetAction(offsetMinutes: number) {
   }
 
   const coerced = Math.round(offsetMinutes);
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const existing = cookieStore.get(TIMEZONE_COOKIE)?.value;
 
   if (existing && Number(existing) === coerced) {

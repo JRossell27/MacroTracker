@@ -30,7 +30,7 @@ export function TimezoneSync() {
       await setTimezoneOffsetAction(offset);
       router.refresh();
     });
-  }, []);
+  }, [router]);
 
   return null;
 }

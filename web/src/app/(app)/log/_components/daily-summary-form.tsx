@@ -251,15 +251,10 @@ function BasalCalculator({ defaults, onApply }: BasalCalculatorProps) {
     setInputs(normalizeBmrInputs(defaults));
     if (Number.isFinite(defaults.basalEstimate)) {
       setLastApplied(Math.round(Number(defaults.basalEstimate)));
+    } else {
+      setLastApplied(null);
     }
-  }, [
-    defaults.weightLbs,
-    defaults.heightFeet,
-    defaults.heightInches,
-    defaults.age,
-    defaults.sex,
-    defaults.basalEstimate,
-  ]);
+  }, [defaults]);
 
   const estimatedBmr = useMemo(() => {
     const weightLbs = Math.max(80, Number(inputs.weightLbs) || 80);
