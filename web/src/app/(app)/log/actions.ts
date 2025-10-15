@@ -8,7 +8,12 @@ import {
   LOG_ACTION_INITIAL_STATE,
   type LogActionState,
 } from "./shared-state";
-
+import {
+  fetchUserSettings,
+  feetAndInchesToInches,
+  mergeUserSettings,
+} from "@/lib/user-settings";
+import type { BiologicalSex } from "@/lib/bmr";
 
 export type GoalRecommendationPayload = {
   logDate: string;
@@ -127,6 +132,16 @@ export async function upsertDailyLogAction(
   }
 
   await recalculateDailyTotals(supabase, data.id);
+  await mergeUserSettings(supabase, user.id, {
+    calories_goal: payload.calories_goal,
+    protein_goal: payload.protein_goal,
+    carbs_goal: payload.carbs_goal,
+    fat_goal: payload.fat_goal,
+    basal_calories: payload.basal_calories,
+    active_calories: payload.active_calories,
+    hydration_target_oz: payload.hydration_target_oz,
+    weight_lbs: payload.weight ?? null,
+  });
   triggerRevalidate();
   return LOG_ACTION_INITIAL_STATE;
 }
@@ -348,8 +363,67 @@ export async function applyGoalRecommendationAction(
     };
   }
 
+  await mergeUserSettings(supabase, user.id, {
+    calories_goal: payload.calories,
+    protein_goal: payload.protein,
+    carbs_goal: payload.carbs,
+    fat_goal: payload.fat,
+  });
+
   triggerRevalidate();
   return LOG_ACTION_INITIAL_STATE;
+}
+
+export type SaveBmrPreferencesPayload = {
+  weightLbs: number;
+  heightFeet: number;
+  heightInches: number;
+  age: number;
+  sex: BiologicalSex;
+  basalCalories: number;
+};
+
+export async function saveBmrPreferencesAction(
+  payload: SaveBmrPreferencesPayload,
+): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const weightLbs = Number.isFinite(payload.weightLbs)
+    ? Math.round(Math.max(80, payload.weightLbs))
+    : 180;
+  const heightInches = Math.max(
+    48,
+    feetAndInchesToInches(payload.heightFeet, payload.heightInches),
+  );
+  const age = Number.isFinite(payload.age)
+    ? Math.round(Math.max(16, Math.min(90, payload.age)))
+    : 30;
+  const sex: BiologicalSex = payload.sex === "female" ? "female" : "male";
+  const basalCalories = Number.isFinite(payload.basalCalories)
+    ? Math.round(Math.max(900, payload.basalCalories))
+    : null;
+
+  const updatePayload: Partial<Database["public"]["Tables"]["user_settings"]["Row"]> =
+    {
+      bmr_weight_lbs: weightLbs,
+      bmr_height_inches: heightInches,
+      bmr_age: age,
+      bmr_sex: sex,
+      weight_lbs: weightLbs,
+    };
+
+  if (basalCalories !== null) {
+    updatePayload.basal_calories = basalCalories;
+  }
+
+  await mergeUserSettings(supabase, user.id, updatePayload);
 }
 export async function addMealFromRecipeAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
@@ -408,6 +482,8 @@ export async function addHydrationAction(
     return { status: "error", message: "Sign back in to log water." };
   }
 
+  const userSettings = await fetchUserSettings(supabase, user.id);
+
   const { data: baseline } = await supabase
     .from("daily_logs")
     .select(
@@ -419,14 +495,15 @@ export async function addHydrationAction(
     .maybeSingle();
 
   const goalDefaults = {
-    calories_goal: baseline?.calories_goal ?? 2200,
-    protein_goal: baseline?.protein_goal ?? 160,
-    carbs_goal: baseline?.carbs_goal ?? 210,
-    fat_goal: baseline?.fat_goal ?? 70,
-    hydration_target_oz: baseline?.hydration_target_oz ?? 100,
-    basal_calories: baseline?.basal_calories ?? 1800,
-    active_calories: baseline?.active_calories ?? 0,
-    weight: baseline?.weight ?? null,
+    calories_goal: baseline?.calories_goal ?? userSettings.goals.calories,
+    protein_goal: baseline?.protein_goal ?? userSettings.goals.protein,
+    carbs_goal: baseline?.carbs_goal ?? userSettings.goals.carbs,
+    fat_goal: baseline?.fat_goal ?? userSettings.goals.fat,
+    hydration_target_oz:
+      baseline?.hydration_target_oz ?? userSettings.goals.hydrationTarget,
+    basal_calories: baseline?.basal_calories ?? userSettings.goals.basal,
+    active_calories: baseline?.active_calories ?? userSettings.goals.active,
+    weight: baseline?.weight ?? userSettings.weightLbs ?? null,
   };
 
   let existing = null as { id: string; hydration_oz: number | null } | null;
@@ -504,6 +581,8 @@ export async function updateActiveCaloriesAction(
     return { status: "error", message: "Sign back in to update active calories." };
   }
 
+  const userSettings = await fetchUserSettings(supabase, user.id);
+
   const { data: baseline } = await supabase
     .from("daily_logs")
     .select(
@@ -515,14 +594,15 @@ export async function updateActiveCaloriesAction(
     .maybeSingle();
 
   const goalDefaults = {
-    calories_goal: baseline?.calories_goal ?? 2200,
-    protein_goal: baseline?.protein_goal ?? 160,
-    carbs_goal: baseline?.carbs_goal ?? 210,
-    fat_goal: baseline?.fat_goal ?? 70,
-    hydration_target_oz: baseline?.hydration_target_oz ?? 100,
+    calories_goal: baseline?.calories_goal ?? userSettings.goals.calories,
+    protein_goal: baseline?.protein_goal ?? userSettings.goals.protein,
+    carbs_goal: baseline?.carbs_goal ?? userSettings.goals.carbs,
+    fat_goal: baseline?.fat_goal ?? userSettings.goals.fat,
+    hydration_target_oz:
+      baseline?.hydration_target_oz ?? userSettings.goals.hydrationTarget,
     hydration_oz: baseline?.hydration_oz ?? 0,
-    basal_calories: baseline?.basal_calories ?? 1800,
-    weight: baseline?.weight ?? null,
+    basal_calories: baseline?.basal_calories ?? userSettings.goals.basal,
+    weight: baseline?.weight ?? userSettings.weightLbs ?? null,
   };
 
   let existing = null as { id: string; active_calories: number | null } | null;
@@ -571,8 +651,10 @@ export async function updateActiveCaloriesAction(
       .throwOnError();
   }
 
+  await mergeUserSettings(supabase, user.id, {
+    active_calories: amount,
+  });
+
   triggerRevalidate();
   return LOG_ACTION_INITIAL_STATE;
 }
-
-

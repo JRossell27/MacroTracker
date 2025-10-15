@@ -208,12 +208,73 @@ export type Database = {
           daily_log_id?: string;
           note?: string;
           created_at?: string | null;
-        };
-        Relationships: [];
       };
+      Relationships: [];
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    user_settings: {
+      Row: {
+        user_id: string;
+        calories_goal: number | null;
+        protein_goal: number | null;
+        carbs_goal: number | null;
+        fat_goal: number | null;
+        basal_calories: number | null;
+        active_calories: number | null;
+        hydration_target_oz: number | null;
+        weight_lbs: number | null;
+        bmr_weight_lbs: number | null;
+        bmr_height_inches: number | null;
+        bmr_age: number | null;
+        bmr_sex: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      Insert: {
+        user_id: string;
+        calories_goal?: number | null;
+        protein_goal?: number | null;
+        carbs_goal?: number | null;
+        fat_goal?: number | null;
+        basal_calories?: number | null;
+        active_calories?: number | null;
+        hydration_target_oz?: number | null;
+        weight_lbs?: number | null;
+        bmr_weight_lbs?: number | null;
+        bmr_height_inches?: number | null;
+        bmr_age?: number | null;
+        bmr_sex?: string | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      };
+      Update: {
+        user_id?: string;
+        calories_goal?: number | null;
+        protein_goal?: number | null;
+        carbs_goal?: number | null;
+        fat_goal?: number | null;
+        basal_calories?: number | null;
+        active_calories?: number | null;
+        hydration_target_oz?: number | null;
+        weight_lbs?: number | null;
+        bmr_weight_lbs?: number | null;
+        bmr_height_inches?: number | null;
+        bmr_age?: number | null;
+        bmr_sex?: string | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      };
+      Relationships: [
+        {
+          foreignKeyName: "user_settings_user_id_fkey";
+          columns: ["user_id"];
+          referencedRelation: "profiles";
+          referencedColumns: ["id"];
+        },
+      ];
+    };
+  };
+  Views: Record<string, never>;
+  Functions: Record<string, never>;
+  Enums: Record<string, never>;
   };
 };

@@ -1,5 +1,6 @@
 import { DailySummaryForm } from "./daily-summary-form";
 import { GoalAdvisor } from "./goal-advisor";
+import type { BiologicalSex } from "@/lib/bmr";
 
 type GoalSummaryPanelProps = {
   logDate: string;
@@ -15,6 +16,14 @@ type GoalSummaryPanelProps = {
     hydrationActual: number;
     weight: number | null;
   };
+  bmrDefaults: {
+    weightLbs: number;
+    heightFeet: number;
+    heightInches: number;
+    age: number;
+    sex: BiologicalSex;
+    basalEstimate: number;
+  };
   dailyLogId: string | null;
 };
 
@@ -22,6 +31,7 @@ export function GoalSummaryPanel({
   logDate,
   existing,
   defaults,
+  bmrDefaults,
   dailyLogId,
 }: GoalSummaryPanelProps) {
   return (
@@ -40,6 +50,7 @@ export function GoalSummaryPanel({
           logDate={logDate}
           existing={existing}
           defaults={defaults}
+          bmrDefaults={bmrDefaults}
         />
       </article>
       <GoalAdvisor

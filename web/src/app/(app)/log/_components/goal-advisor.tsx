@@ -8,6 +8,7 @@ import {
   type GoalRecommendationPayload,
 } from "../actions";
 import { LOG_ACTION_INITIAL_STATE } from "../shared-state";
+import { calculateBmr } from "@/lib/bmr";
 
 type GoalAdvisorProps = {
   logDate: string;
@@ -81,19 +82,19 @@ export function GoalAdvisor({
 
   const recommendation = useMemo(() => {
     const weightLbs = Math.max(80, Number(inputs.weightLbs) || 80);
-    const weightKg = weightLbs * 0.453592;
     const heightIn = Math.max(
       56,
       Number(inputs.heightFeet) * 12 + Number(inputs.heightInches) || 68,
     );
-    const heightCm = heightIn * 2.54;
     const age = Math.max(16, Number(inputs.age) || 30);
     const activity = activityMultipliers[inputs.activity] ?? 1.55;
     const goalAdj = goalAdjustments[inputs.goal] ?? -450;
-    const bmr =
-      inputs.sex === "male"
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+    const bmr = calculateBmr({
+      weightLbs,
+      heightInches: heightIn,
+      age,
+      sex: inputs.sex === "male" ? "male" : "female",
+    });
     const tdee = bmr * activity;
     const calories = Math.max(1200, Math.round(tdee + goalAdj));
     const protein = Math.round(

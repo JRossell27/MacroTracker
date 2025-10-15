@@ -4,6 +4,11 @@ import { getLocalISODate } from "@/lib/date";
 import type { Database } from "@/lib/database.types";
 import { GoalSummaryPanel } from "../log/_components/goal-summary-panel";
 import { RecipesManager } from "./recipes-manager";
+import {
+  FALLBACK_USER_SETTINGS,
+  fetchUserSettings,
+  inchesToFeetAndInches,
+} from "@/lib/user-settings";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
 
@@ -37,16 +42,31 @@ export default async function SettingsPage() {
     .returns<DailyLogRow[]>()
     .maybeSingle();
 
+  const userId = session?.user.id ?? null;
+  const userSettings = userId
+    ? await fetchUserSettings(supabase, userId)
+    : FALLBACK_USER_SETTINGS;
+
+  const heightParts = inchesToFeetAndInches(userSettings.bmr.heightInches);
+  const bmrDefaults = {
+    weightLbs: userSettings.bmr.weightLbs,
+    heightFeet: Math.max(4, heightParts.feet || 0),
+    heightInches: Math.min(11, Math.max(0, heightParts.inches || 0)),
+    age: userSettings.bmr.age,
+    sex: userSettings.bmr.sex,
+    basalEstimate: userSettings.goals.basal,
+  };
+
   const summaryDefaults = {
-    caloriesGoal: log?.calories_goal ?? 2200,
-    proteinGoal: log?.protein_goal ?? 160,
-    carbsGoal: log?.carbs_goal ?? 210,
-    fatGoal: log?.fat_goal ?? 70,
-    basalCalories: log?.basal_calories ?? 1800,
-    activeCalories: log?.active_calories ?? 500,
-    hydrationTarget: log?.hydration_target_oz ?? 100,
+    caloriesGoal: log?.calories_goal ?? userSettings.goals.calories,
+    proteinGoal: log?.protein_goal ?? userSettings.goals.protein,
+    carbsGoal: log?.carbs_goal ?? userSettings.goals.carbs,
+    fatGoal: log?.fat_goal ?? userSettings.goals.fat,
+    basalCalories: log?.basal_calories ?? userSettings.goals.basal,
+    activeCalories: log?.active_calories ?? userSettings.goals.active,
+    hydrationTarget: log?.hydration_target_oz ?? userSettings.goals.hydrationTarget,
     hydrationActual: log?.hydration_oz ?? 0,
-    weight: log?.weight ?? null,
+    weight: log?.weight ?? userSettings.weightLbs,
   };
 
   const { data: recipes } = await supabase
@@ -66,6 +86,7 @@ export default async function SettingsPage() {
         logDate={log?.log_date ?? today}
         existing={Boolean(log)}
         defaults={summaryDefaults}
+        bmrDefaults={bmrDefaults}
         dailyLogId={log?.id ?? null}
       />
       <RecipesManager recipes={recipes ?? []} />

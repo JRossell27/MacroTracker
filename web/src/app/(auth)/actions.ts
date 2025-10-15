@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
+import { mergeUserSettings } from "@/lib/user-settings";
 
 export type AuthActionState = {
   status: "idle" | "error";
@@ -43,6 +44,7 @@ export async function signInAction(
       .from("profiles")
       .upsert({ id: user.id, display_name: user.user_metadata?.full_name ?? null })
       .throwOnError();
+    await mergeUserSettings(supabase, user.id, {});
   }
 
   revalidatePath("/", "layout");
@@ -90,6 +92,7 @@ export async function signUpAction(
       .from("profiles")
       .upsert(profileUpsert)
       .throwOnError();
+    await mergeUserSettings(supabase, sessionUser.id, {});
   }
 
   revalidatePath("/", "layout");

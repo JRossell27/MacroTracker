@@ -10,6 +10,10 @@ import { AddHydrationForm } from "./_components/add-hydration-form";
 import { ActiveCaloriesForm } from "./_components/active-calories-form";
 import { AddNoteForm } from "./_components/add-note-form";
 import { calculateMealTotals } from "@/lib/nutrition";
+import {
+  FALLBACK_USER_SETTINGS,
+  fetchUserSettings,
+} from "@/lib/user-settings";
 import type { Database } from "@/lib/database.types";
 
 type DailyLogRow = Database["public"]["Tables"]["daily_logs"]["Row"];
@@ -22,18 +26,6 @@ type DailyLogWithRelations = DailyLogRow & {
     "id" | "name" | "logged_at" | "calories" | "protein" | "carbs" | "fat" | "created_at"
   >[];
   daily_notes: Pick<NoteRow, "id" | "note" | "created_at">[];
-};
-
-const DEFAULT_GOALS = {
-  caloriesGoal: 2200,
-  proteinGoal: 160,
-  carbsGoal: 210,
-  fatGoal: 70,
-  basalCalories: 1800,
-  activeCalories: 500,
-  hydrationTarget: 100,
-  hydrationActual: 0,
-  weight: null as number | null,
 };
 
 export default async function LogPage() {
@@ -87,6 +79,11 @@ export default async function LogPage() {
     .returns<DailyLogWithRelations[]>()
     .maybeSingle();
 
+  const userId = session?.user.id ?? null;
+  const userSettings = userId
+    ? await fetchUserSettings(supabase, userId)
+    : FALLBACK_USER_SETTINGS;
+
   const dailyLogId = log?.id ?? null;
   const { data: recipes } = await supabase
     .from("recipes")
@@ -111,15 +108,15 @@ export default async function LogPage() {
       : 0;
 
   const summaryDefaults = {
-    caloriesGoal: log?.calories_goal ?? DEFAULT_GOALS.caloriesGoal,
-    proteinGoal: log?.protein_goal ?? DEFAULT_GOALS.proteinGoal,
-    carbsGoal: log?.carbs_goal ?? DEFAULT_GOALS.carbsGoal,
-    fatGoal: log?.fat_goal ?? DEFAULT_GOALS.fatGoal,
-    basalCalories: log?.basal_calories ?? DEFAULT_GOALS.basalCalories,
-    activeCalories: log?.active_calories ?? DEFAULT_GOALS.activeCalories,
-    hydrationTarget: log?.hydration_target_oz ?? DEFAULT_GOALS.hydrationTarget,
-    hydrationActual: log?.hydration_oz ?? DEFAULT_GOALS.hydrationActual,
-    weight: log?.weight ?? DEFAULT_GOALS.weight,
+    caloriesGoal: log?.calories_goal ?? userSettings.goals.calories,
+    proteinGoal: log?.protein_goal ?? userSettings.goals.protein,
+    carbsGoal: log?.carbs_goal ?? userSettings.goals.carbs,
+    fatGoal: log?.fat_goal ?? userSettings.goals.fat,
+    basalCalories: log?.basal_calories ?? userSettings.goals.basal,
+    activeCalories: log?.active_calories ?? userSettings.goals.active,
+    hydrationTarget: log?.hydration_target_oz ?? userSettings.goals.hydrationTarget,
+    hydrationActual: log?.hydration_oz ?? 0,
+    weight: log?.weight ?? userSettings.weightLbs,
   };
 
   const displayDate = formatDisplayDate(log?.log_date ?? today);
