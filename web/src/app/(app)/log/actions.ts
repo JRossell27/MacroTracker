@@ -30,9 +30,22 @@ async function recalculateDailyTotals(
   const { data: meals } = await supabase
     .from("meals")
     .select("calories, protein, carbs, fat")
-    .eq("daily_log_id", dailyLogId);
+    .eq("daily_log_id", dailyLogId)
+    .returns<
+      Pick<
+        Database["public"]["Tables"]["meals"]["Row"],
+        "calories" | "protein" | "carbs" | "fat"
+      >[]
+    >();
 
-  const totals = (meals ?? []).reduce(
+  type MacroTotals = {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+
+  const totals = (meals ?? []).reduce<MacroTotals>(
     (acc, meal) => ({
       calories: acc.calories + (meal.calories ?? 0),
       protein: acc.protein + (meal.protein ?? 0),
