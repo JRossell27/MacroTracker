@@ -21,6 +21,11 @@ type RecentLog = {
   log_date: string;
 };
 
+type WeightHistoryRow = {
+  log_date: string;
+  weight: number | null;
+};
+
 function buildDateRange(start: Date, days: number, offset?: number) {
   return Array.from({ length: days }, (_, index) => {
     const date = new Date(start);
@@ -81,6 +86,14 @@ export default async function TrendsPage() {
     .order("log_date", { ascending: false })
     .limit(30)
     .returns<RecentLog[]>();
+
+  const { data: weightHistory } = await supabase
+    .from("daily_logs")
+    .select("log_date, weight")
+    .eq("user_id", session?.user.id ?? "")
+    .not("weight", "is", null)
+    .order("log_date", { ascending: true })
+    .returns<WeightHistoryRow[]>();
 
   const logsByDate = new Map((weeklyLogs ?? []).map((log) => [log.log_date, log]));
   const range = buildDateRange(startDate, 7, timezoneOffset).map((day) => ({
@@ -153,6 +166,16 @@ export default async function TrendsPage() {
   const compliance = Math.round((loggedDays / range.length) * 100);
 
   const streak = calculateStreak(recentLogs ?? [], todayIso, timezoneOffset);
+  let lifetimeWeightDelta: number | null = null;
+
+  if (weightHistory && weightHistory.length >= 2) {
+    const first = weightHistory[0]?.weight ?? null;
+    const last = weightHistory[weightHistory.length - 1]?.weight ?? null;
+
+    if (typeof first === "number" && typeof last === "number") {
+      lifetimeWeightDelta = Math.round((last - first) * 10) / 10;
+    }
+  }
 
   return (
     <MobileShell
@@ -169,9 +192,21 @@ export default async function TrendsPage() {
               {averageNetCalories} kcal
             </p>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-            {averageWeightChange} lb change
-          </span>
+          <div className="flex flex-col items-end gap-2 text-xs font-semibold text-slate-300">
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
+              {averageWeightChange} lb change (week)
+            </span>
+            {lifetimeWeightDelta !== null ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-3 py-1 text-slate-200">
+                Total {lifetimeWeightDelta * -1 >= 0 ? "-" : "+"}
+                {Math.abs(lifetimeWeightDelta)} lb overall
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/70 px-3 py-1 text-slate-400">
+                Log weight to track total change
+              </span>
+            )}
+          </div>
         </div>
         <div className="text-xs text-slate-400">
           Based on data from {startIso} - {todayIso}.
