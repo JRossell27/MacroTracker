@@ -3,6 +3,7 @@ import { MobileNav } from "@/components/navigation/mobile-nav";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { signOutAction } from "@/app/(auth)/actions";
+import type { Database } from "@/lib/database.types";
 
 export default async function AppLayout({
   children,
@@ -14,14 +15,23 @@ export default async function AppLayout({
     data: { session },
   } = await supabase.auth.getSession();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", session?.user.id ?? "")
-    .maybeSingle();
+  let displayName =
+    session?.user?.user_metadata?.full_name ?? session?.user?.email ?? "You";
 
-  const displayName =
-    profile?.display_name ?? session?.user.user_metadata?.full_name ?? session?.user.email ?? "You";
+  if (session?.user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", session.user.id)
+      .returns<
+        Pick<Database["public"]["Tables"]["profiles"]["Row"], "display_name">[]
+      >()
+      .maybeSingle();
+
+    if (profile?.display_name) {
+      displayName = profile.display_name;
+    }
+  }
 
   return (
     <div className="relative flex min-h-dvh flex-col gap-6 px-4 pb-24 pt-6">
