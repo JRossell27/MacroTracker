@@ -430,11 +430,18 @@ export async function addHydrationAction(
   if (!target) {
     const { data, error } = await supabase
       .from("daily_logs")
-      .upsert({
-        user_id: user.id,
-        log_date: logDate,
-        hydration_oz: amount,
-      })
+      .upsert(
+        {
+          user_id: user.id,
+          log_date: logDate,
+          calories_goal: 2200,
+          protein_goal: 160,
+          carbs_goal: 210,
+          fat_goal: 70,
+          hydration_oz: amount,
+        },
+        { onConflict: "user_id,log_date" },
+      )
       .select("id, hydration_oz")
       .maybeSingle();
 
