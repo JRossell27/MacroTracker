@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: #020617;
+  --color-background-raised: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-muted: #64748b;
+  --color-accent: #38bdf8;
+  --color-positive: #34d399;
+  --color-negative: #f87171;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-geist-sans);
+  }
+
+  body {
+    background: radial-gradient(circle at 20% 20%, #0f172a 0, #020617 60%);
+    color: var(--color-foreground);
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background: color-mix(in lab, var(--color-accent) 60%, transparent);
+  }
+
+  * {
+    @apply border-slate-800;
+  }
+}
+
+@layer utilities {
+  .card {
+    @apply rounded-3xl border border-slate-800/60 bg-slate-900/50 shadow-[0_20px_40px_rgba(15,23,42,0.45)] backdrop-blur;
+  }
+
+  .surface {
+    @apply rounded-2xl border border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-sm;
+  }
+}
