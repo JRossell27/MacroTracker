@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../database.types";
 
 export function createSupabaseServerClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
+  const requestCookies = cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,13 +13,13 @@ export function createSupabaseServerClient(): SupabaseClient<Database> {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return requestCookies.get(name)?.value ?? null;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
+          requestCookies.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.delete({ name, ...options });
+          requestCookies.delete({ name, ...options });
         },
       },
     },
