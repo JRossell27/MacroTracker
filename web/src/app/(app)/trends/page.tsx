@@ -127,16 +127,8 @@ export default async function TrendsPage() {
     ...energySeries.map((point) => Math.abs(point.netCalories)),
   );
 
-  const weights = range
-    .map((day) => day.log?.weight)
-    .filter((weight): weight is number => typeof weight === "number");
-
-  let averageWeightChange = 0;
-  if (weights.length >= 2) {
-    const first = weights[0];
-    const last = weights[weights.length - 1];
-    averageWeightChange = Math.round((last - first) * 100) / 100;
-  }
+  const weeklyNetTotal = netValues.reduce((sum, value) => sum + value, 0);
+  const estimatedWeeklyChange = Math.round((weeklyNetTotal / 3500) * 10) / 10;
 
   const totalProtein = range.reduce(
     (sum, day) => sum + (day.log?.protein_intake ?? 0),
@@ -179,6 +171,13 @@ export default async function TrendsPage() {
     ? Math.round((Math.abs(lifetimeNetCalories) / 3500) * 10) / 10
     : 0;
 
+  const formatChange = (value: number) => {
+    if (!Number.isFinite(value)) return "0.0";
+    const rounded = Math.abs(value) < 0.05 ? 0 : Math.round(value * 10) / 10;
+    if (rounded === 0) return "0.0";
+    return `${rounded > 0 ? "+" : ""}${rounded.toFixed(1)}`;
+  };
+
   return (
     <MobileShell
       title="Trends"
@@ -196,10 +195,10 @@ export default async function TrendsPage() {
           </div>
           <div className="flex flex-col items-end gap-2 text-xs font-semibold text-slate-300">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
-              {averageWeightChange} lb est. this week
+              {formatChange(estimatedWeeklyChange)} lb est. this week
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-3 py-1 text-slate-200">
-              Total {lifetimeWeightLost > 0 ? `-${lifetimeWeightLost}` : "0"} lb from logged deficit
+              Total {lifetimeWeightLost.toFixed(1)} lb lost from logged deficit
             </span>
           </div>
         </div>
